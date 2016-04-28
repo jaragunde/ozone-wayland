@@ -5,10 +5,6 @@
 
 {
   'variables': {
-    'variables': {
-      'enable_drm_support%': 0,
-    },
-    'enable_drm_support%': '<(enable_drm_support)',
     'conditions': [
       ['sysroot!=""', {
         'pkg-config': '../../build/linux/pkg-config-wrapper "<(sysroot)" "<(target_arch)"',
@@ -42,17 +38,14 @@
       'direct_dependent_settings': {
         'cflags': [
           '<!@(<(pkg-config) --cflags <(wayland_packages))',
-          '<!@(<(pkg-config) --cflags gbm)',
         ],
       },
       'link_settings': {
         'ldflags': [
           '<!@(<(pkg-config) --libs-only-L --libs-only-other <(wayland_packages))',
-          '<!@(<(pkg-config) --libs-only-L --libs-only-other gbm)',
         ],
         'libraries': [
           '<!@(<(pkg-config) --libs-only-l <(wayland_packages))',
-          '<!@(<(pkg-config) --libs-only-l gbm)',
           '-lilmInput -lilmCommon',
         ],
       },
@@ -65,19 +58,6 @@
       'include_dirs': [
         '../..',
         '<(DEPTH)/third_party/khronos',
-      ],
-      'conditions': [
-        ['<(enable_drm_support)==1', {
-          'defines': [
-          'ENABLE_DRM_SUPPORT',
-          ],
-          'sources': [
-            'egl/wayland_pixmap.cc',
-            'egl/wayland_pixmap.h',
-            'protocol/wayland-drm-protocol.cc',
-            'protocol/wayland-drm-protocol.h',
-          ],
-        }],
       ],
       'sources': [
         'data_device.cc',
