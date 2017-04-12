@@ -39,6 +39,7 @@ void WaylandPointer::OnSeatCapabilities(wl_seat *seat, uint32_t caps) {
     cursor_ = new WaylandCursor();
 
   dispatcher_ = WaylandDisplay::GetInstance();
+  seat_ = static_cast<WaylandSeat*>(wl_seat_get_user_data(seat));
 
   if ((caps & WL_SEAT_CAPABILITY_POINTER) && !cursor_->GetInputPointer()) {
     input_pointer_ = wl_seat_get_pointer(seat);
@@ -55,7 +56,7 @@ void WaylandPointer::OnMotionNotify(void* data,
                                     wl_fixed_t sx_w,
                                     wl_fixed_t sy_w) {
   WaylandPointer* device = static_cast<WaylandPointer*>(data);
-  WaylandSeat* seat = WaylandDisplay::GetInstance()->PrimarySeat();
+  WaylandSeat* seat = device->seat_;
   float sx = wl_fixed_to_double(sx_w);
   float sy = wl_fixed_to_double(sy_w);
 
@@ -76,7 +77,8 @@ void WaylandPointer::OnButtonNotify(void* data,
                                     uint32_t state) {
   WaylandPointer* device = static_cast<WaylandPointer*>(data);
   WaylandDisplay::GetInstance()->SetSerial(serial);
-  WaylandSeat* seat = WaylandDisplay::GetInstance()->PrimarySeat();
+  WaylandSeat* seat = device->seat_;
+
   if (seat->GetFocusWindowHandle() && seat->GetGrabButton() == 0 &&
         state == WL_POINTER_BUTTON_STATE_PRESSED)
     seat->SetGrabWindowHandle(seat->GetFocusWindowHandle(), button);
@@ -139,14 +141,14 @@ void WaylandPointer::OnPointerEnter(void* data,
                                     wl_surface* surface,
                                     wl_fixed_t sx_w,
                                     wl_fixed_t sy_w) {
-  WaylandSeat* seat = WaylandDisplay::GetInstance()->PrimarySeat();
+  WaylandPointer* device = static_cast<WaylandPointer*>(data);
+  WaylandSeat* seat = device->seat_;
 
   if (!surface) {
     seat->SetFocusWindowHandle(0);
     return;
   }
 
-  WaylandPointer* device = static_cast<WaylandPointer*>(data);
   WaylandWindow* window =
       static_cast<WaylandWindow*>(wl_surface_get_user_data(surface));
   unsigned handle = window->Handle();
@@ -168,7 +170,7 @@ void WaylandPointer::OnPointerLeave(void* data,
   WaylandPointer* device = static_cast<WaylandPointer*>(data);
   WaylandDisplay::GetInstance()->SetSerial(serial);
 
-  WaylandSeat* seat = WaylandDisplay::GetInstance()->PrimarySeat();
+  WaylandSeat* seat = device->seat_;
   device->dispatcher_->PointerLeave(seat->GetFocusWindowHandle(),
                                     device->pointer_position_.x(),
                                     device->pointer_position_.y());

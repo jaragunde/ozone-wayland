@@ -57,6 +57,7 @@ class WaylandTouchscreen {
   WaylandDisplay* dispatcher_;
   gfx::Point pointer_position_;
   struct wl_touch* wl_touch_;
+  WaylandSeat* seat_;
   uint32_t device_id_;
 
   DISALLOW_COPY_AND_ASSIGN(WaylandTouchscreen);

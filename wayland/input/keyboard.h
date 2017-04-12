@@ -52,6 +52,7 @@ class WaylandKeyboard {
 
   wl_keyboard* input_keyboard_;
   WaylandDisplay* dispatcher_;
+  WaylandSeat* seat_;
   uint32_t device_id_;
 
   DISALLOW_COPY_AND_ASSIGN(WaylandKeyboard);

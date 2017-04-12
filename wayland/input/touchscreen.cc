@@ -34,6 +34,7 @@ void WaylandTouchscreen::OnSeatCapabilities(wl_seat *seat, uint32_t caps) {
   };
 
   dispatcher_ = WaylandDisplay::GetInstance();
+  seat_ = static_cast<WaylandSeat*>(wl_seat_get_user_data(seat));
 
   if ((caps & WL_SEAT_CAPABILITY_TOUCH)) {
     wl_touch_ = wl_seat_get_touch(seat);

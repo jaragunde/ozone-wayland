@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "ozone/wayland/input/keyboard.h"
+#include "ozone/wayland/seat.h"
 
 namespace ozonewayland {
 
@@ -26,6 +27,7 @@ void WaylandKeyboard::OnSeatCapabilities(wl_seat *seat, uint32_t caps) {
 
   dispatcher_ =
       WaylandDisplay::GetInstance();
+  seat_ = static_cast<WaylandSeat*>(wl_seat_get_user_data(seat));
 
   if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !input_keyboard_) {
     input_keyboard_ = wl_seat_get_keyboard(seat);
@@ -42,6 +44,7 @@ void WaylandKeyboard::OnKeyNotify(void* data,
                                   uint32_t key,
                                   uint32_t state) {
   WaylandKeyboard* device = static_cast<WaylandKeyboard*>(data);
+  WaylandSeat* seat = device->seat_;
   ui::EventType type = ui::ET_KEY_PRESSED;
   WaylandDisplay::GetInstance()->SetSerial(serial);
   if (state == WL_KEYBOARD_KEY_STATE_RELEASED)

@@ -61,6 +61,7 @@ class WaylandPointer {
 
   WaylandCursor* cursor_;
   WaylandDisplay* dispatcher_;
+  WaylandSeat* seat_;
   uint32_t device_id_;
 
   // Keeps track of the last position for the motion event. We want to
