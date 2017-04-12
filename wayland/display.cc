@@ -783,6 +783,11 @@ void WaylandDisplay::DragDrop(unsigned windowhandle) {
   Dispatch(new WaylandInput_DragDrop(windowhandle));
 }
 
+void WaylandDisplay::SeatCreated(const std::string name,
+                                 const std::vector<uint32_t> device_ids) {
+  Dispatch(new WaylandInput_SeatCreated(name, device_ids));
+}
+
 void WaylandDisplay::Dispatch(IPC::Message* message) {
   if (!loop_) {
     deferred_messages_.push(message);

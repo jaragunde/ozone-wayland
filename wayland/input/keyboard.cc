@@ -31,6 +31,7 @@ void WaylandKeyboard::OnSeatCapabilities(wl_seat *seat, uint32_t caps) {
     input_keyboard_ = wl_seat_get_keyboard(seat);
     wl_keyboard_add_listener(input_keyboard_, &kInputKeyboardListener,
         this);
+    device_id_ = wl_proxy_get_id(reinterpret_cast<wl_proxy*>(input_keyboard_));
   }
 }
 

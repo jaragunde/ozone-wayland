@@ -18,6 +18,7 @@ class WaylandTouchscreen {
   ~WaylandTouchscreen();
 
   void OnSeatCapabilities(wl_seat *seat, uint32_t caps);
+  uint32_t GetDeviceId() { return device_id_; }
 
  private:
   static void OnTouchDown(
@@ -56,6 +57,7 @@ class WaylandTouchscreen {
   WaylandDisplay* dispatcher_;
   gfx::Point pointer_position_;
   struct wl_touch* wl_touch_;
+  uint32_t device_id_;
 
   DISALLOW_COPY_AND_ASSIGN(WaylandTouchscreen);
 };

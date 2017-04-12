@@ -164,6 +164,9 @@ class WaylandDisplay : public ui::SurfaceFactoryOzone,
   void DragMotion(unsigned windowhandle, float x, float y, uint32_t time);
   void DragDrop(unsigned windowhandle);
 
+  void SeatCreated(const std::string name,
+                   const std::vector<uint32_t> device_ids);
+
 #if defined(ENABLE_DRM_SUPPORT)
   // DRM related.
   void DrmHandleDevice(const char*);

@@ -13,6 +13,7 @@
 #include "ozone/platform/messages.h"
 #include "ozone/platform/ozone_gpu_platform_support_host.h"
 #include "ozone/platform/ozone_wayland_window.h"
+#include "ozone/platform/ozone_wayland_seat.h"
 #include "ozone/wayland/ozone_wayland_screen.h"
 #include "ui/aura/window.h"
 #include "ui/events/event_utils.h"
@@ -24,6 +25,7 @@ namespace ui {
 
 WindowManagerWayland::WindowManagerWayland(OzoneGpuPlatformSupportHost* proxy)
     : open_windows_(NULL),
+      seats_(),
       active_window_(NULL),
       proxy_(proxy),
       keyboard_(&modifiers_,
@@ -36,6 +38,10 @@ WindowManagerWayland::WindowManagerWayland(OzoneGpuPlatformSupportHost* proxy)
 }
 
 WindowManagerWayland::~WindowManagerWayland() {
+  if (!seats_.empty()) {
+    STLDeleteValues(&seats_);
+    seats_.clear();
+  }
 }
 
 void WindowManagerWayland::OnRootWindowCreated(
@@ -262,6 +268,7 @@ bool WindowManagerWayland::OnMessageReceived(const IPC::Message& message) {
   IPC_MESSAGE_HANDLER(WaylandInput_DragLeave, DragLeave)
   IPC_MESSAGE_HANDLER(WaylandInput_DragMotion, DragMotion)
   IPC_MESSAGE_HANDLER(WaylandInput_DragDrop, DragDrop)
+  IPC_MESSAGE_HANDLER(WaylandInput_SeatCreated, SeatCreated)
   IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
@@ -431,6 +438,12 @@ void WindowManagerWayland::DragDrop(unsigned windowhandle) {
       FROM_HERE,
       base::Bind(&WindowManagerWayland::NotifyDragDrop,
           weak_ptr_factory_.GetWeakPtr(), windowhandle));
+}
+
+void WindowManagerWayland::SeatCreated(const std::string name,
+                                       std::vector<uint32_t> device_ids) {
+  OzoneWaylandSeat* seat = new OzoneWaylandSeat(name, device_ids);
+  seats_[name] = seat;
 }
 
 void WindowManagerWayland::InitializeXKB(base::SharedMemoryHandle fd,

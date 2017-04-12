@@ -45,6 +45,7 @@ void WaylandPointer::OnSeatCapabilities(wl_seat *seat, uint32_t caps) {
       cursor_->SetInputPointer(input_pointer_);
     wl_pointer_set_user_data(input_pointer_, this);
     wl_pointer_add_listener(input_pointer_, &kInputPointerListener, this);
+    device_id_ = wl_proxy_get_id(reinterpret_cast<wl_proxy*>(input_pointer_));
   }
 }
 

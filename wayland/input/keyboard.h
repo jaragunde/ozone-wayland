@@ -15,6 +15,7 @@ class WaylandKeyboard {
   ~WaylandKeyboard();
 
   void OnSeatCapabilities(wl_seat *seat, uint32_t caps);
+  uint32_t GetDeviceId() { return device_id_; }
 
  private:
   static void OnKeyNotify(void* data,
@@ -51,6 +52,7 @@ class WaylandKeyboard {
 
   wl_keyboard* input_keyboard_;
   WaylandDisplay* dispatcher_;
+  uint32_t device_id_;
 
   DISALLOW_COPY_AND_ASSIGN(WaylandKeyboard);
 };

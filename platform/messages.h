@@ -142,6 +142,10 @@ IPC_MESSAGE_CONTROL4(WaylandInput_DragMotion,  // NOLINT(readability/fn_size)
 IPC_MESSAGE_CONTROL1(WaylandInput_DragDrop,  // NOLINT(readability/fn_size)
                      unsigned /* window handle */)
 
+IPC_MESSAGE_CONTROL2(WaylandInput_SeatCreated,  // NOLINT(readability/fn_size)
+                     std::string /* seat_name */,
+                     std::vector<uint32_t> /* device_ids */)
+
 //------------------------------------------------------------------------------
 // GPU Messages
 // These messages are from the Browser to the GPU process.

@@ -6,6 +6,7 @@
 #define OZONE_IMPL_PLATFORM_WINDOW_MANAGER_OZONE_H_
 
 #include <list>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -29,7 +30,10 @@ class OzoneWaylandScreen;
 namespace ui {
 
 class OzoneGpuPlatformSupportHost;
+class OzoneWaylandSeat;
 class OzoneWaylandWindow;
+
+typedef std::map<std::string, OzoneWaylandSeat*> SeatMap;
 
 // A static class used by OzoneWaylandWindow for basic window management.
 class WindowManagerWayland
@@ -124,6 +128,9 @@ class WindowManagerWayland
   void DragMotion(unsigned windowhandle, float x, float y, uint32_t time);
   void DragDrop(unsigned windowhandle);
 
+  void SeatCreated(const std::string name,
+                   std::vector<uint32_t> device_ids);
+
   void InitializeXKB(base::SharedMemoryHandle fd, uint32_t size);
   // PlatformEventSource:
   void OnDispatcherListChanged() override;
@@ -170,6 +177,7 @@ class WindowManagerWayland
 
   // List of all open aura::Window.
   std::list<OzoneWaylandWindow*>* open_windows_;
+  SeatMap seats_;
   gfx::AcceleratedWidget event_grabber_ = gfx::kNullAcceleratedWidget;
   OzoneWaylandWindow* active_window_;
   gfx::AcceleratedWidget current_capture_ = gfx::kNullAcceleratedWidget;

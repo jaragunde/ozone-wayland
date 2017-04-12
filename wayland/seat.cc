@@ -28,10 +28,11 @@ WaylandSeat::WaylandSeat(WaylandDisplay* display,
       text_input_(NULL) {
   static const struct wl_seat_listener kInputSeatListener = {
     WaylandSeat::OnSeatCapabilities,
+    WaylandSeat::OnSeatName,
   };
 
   seat_ = static_cast<wl_seat*>(
-      wl_registry_bind(display->registry(), id, &wl_seat_interface, 1));
+      wl_registry_bind(display->registry(), id, &wl_seat_interface, 2));
   DCHECK(seat_);
   wl_seat_add_listener(seat_, &kInputSeatListener, this);
   wl_seat_set_user_data(seat_, this);
@@ -76,6 +77,21 @@ void WaylandSeat::OnSeatCapabilities(void *data, wl_seat *seat, uint32_t caps) {
     delete device->input_touch_;
     device->input_touch_ = NULL;
   }
+}
+
+void WaylandSeat::OnSeatName(void *data, wl_seat *seat, const char *name) {
+  WaylandSeat* device = static_cast<WaylandSeat*>(data);
+  device->name_ = std::string(name);
+
+  std::vector<uint32_t> device_ids;
+  if (device->input_touch_)
+    device_ids.push_back(device->input_touch_->GetDeviceId());
+  if (device->input_keyboard_)
+    device_ids.push_back(device->input_keyboard_->GetDeviceId());
+  if (device->input_pointer_)
+    device_ids.push_back(device->input_pointer_->GetDeviceId());
+
+  WaylandDisplay::GetInstance()->SeatCreated(device->name_, device_ids);
 }
 
 void WaylandSeat::SetFocusWindowHandle(unsigned windowhandle) {

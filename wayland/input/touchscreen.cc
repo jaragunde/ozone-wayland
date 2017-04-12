@@ -39,6 +39,7 @@ void WaylandTouchscreen::OnSeatCapabilities(wl_seat *seat, uint32_t caps) {
     wl_touch_ = wl_seat_get_touch(seat);
     wl_touch_set_user_data(wl_touch_, this);
     wl_touch_add_listener(wl_touch_, &kInputTouchListener, this);
+    device_id_ = wl_proxy_get_id(reinterpret_cast<wl_proxy*>(wl_touch_));
   }
 }
 

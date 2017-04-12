@@ -40,6 +40,8 @@
 	'platform/ozone_gpu_platform_support_host.cc',
         'platform/ozone_platform_wayland.cc',
         'platform/ozone_platform_wayland.h',
+        'platform/ozone_wayland_seat.cc',
+        'platform/ozone_wayland_seat.h',
         'platform/ozone_wayland_window.cc',
         'platform/ozone_wayland_window.h',
 	'platform/window_constants.h',

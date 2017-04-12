@@ -20,6 +20,7 @@ class WaylandPointer {
 
   void OnSeatCapabilities(wl_seat *seat, uint32_t caps);
   WaylandCursor* Cursor() const { return cursor_; }
+  uint32_t GetDeviceId() { return device_id_; }
 
  private:
   static void OnMotionNotify(
@@ -60,6 +61,8 @@ class WaylandPointer {
 
   WaylandCursor* cursor_;
   WaylandDisplay* dispatcher_;
+  uint32_t device_id_;
+
   // Keeps track of the last position for the motion event. We want to
   // dispatch this with events such as wheel or button which don't have a
   // position associated on Wayland.

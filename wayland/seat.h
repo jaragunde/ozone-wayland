@@ -7,6 +7,7 @@
 
 #include <wayland-client.h>
 #include <vector>
+#include <string>
 
 #include "base/macros.h"
 #include "third_party/skia/include/core/SkBitmap.h"
@@ -33,6 +34,7 @@ class WaylandSeat {
   unsigned GetFocusWindowHandle() const { return focused_window_handle_; }
   unsigned GetGrabWindowHandle() const { return grab_window_handle_; }
   uint32_t GetGrabButton() const { return grab_button_; }
+  std::string GetName() const { return name_; }
   void SetFocusWindowHandle(unsigned windowhandle);
   void SetGrabWindowHandle(unsigned windowhandle, uint32_t button);
   void SetCursorBitmap(const std::vector<SkBitmap>& bitmaps,
@@ -48,12 +50,14 @@ class WaylandSeat {
   static void OnSeatCapabilities(void *data,
                                  wl_seat *seat,
                                  uint32_t caps);
+  static void OnSeatName(void *data, wl_seat *seat, const char *name);
 
   // Keeps track of current focused window.
   unsigned focused_window_handle_;
   unsigned grab_window_handle_;
   uint32_t grab_button_;
   struct wl_seat* seat_;
+  std::string name_;
   WaylandDataDevice* data_device_;
   WaylandKeyboard* input_keyboard_;
   WaylandPointer* input_pointer_;
