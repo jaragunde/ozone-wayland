@@ -28,6 +28,7 @@ class WLShellSurface : public WaylandShellSurface {
   void Minimize() override;
   void Unminimize() override;
   bool IsMinimized() const override;
+  bool CanAcceptSeatEvents(const char* seat_name) override;
 
   static void HandleConfigure(void* data,
                               struct wl_shell_surface* shell_surface,

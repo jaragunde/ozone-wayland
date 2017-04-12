@@ -34,6 +34,7 @@ class WaylandShellSurface {
   virtual void Minimize() = 0;
   virtual void Unminimize() = 0;
   virtual bool IsMinimized() const = 0;
+  virtual bool CanAcceptSeatEvents(const char* seat_name) = 0;
 
   // static functions.
   static void PopupDone();

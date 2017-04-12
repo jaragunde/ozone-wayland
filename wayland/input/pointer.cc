@@ -9,6 +9,7 @@
 #include "ozone/wayland/input/cursor.h"
 #include "ozone/wayland/seat.h"
 #include "ozone/wayland/window.h"
+#include "ozone/wayland/shell/shell_surface.h"
 #include "ui/events/event.h"
 
 namespace ozonewayland {
@@ -78,6 +79,18 @@ void WaylandPointer::OnButtonNotify(void* data,
   WaylandPointer* device = static_cast<WaylandPointer*>(data);
   WaylandDisplay::GetInstance()->SetSerial(serial);
   WaylandSeat* seat = device->seat_;
+  WaylandWindow* window = WaylandDisplay::GetInstance()->GetWindow(seat->GetFocusWindowHandle());
+  if (!window) {
+    LOG(ERROR) << "JACOBOOOOOOO: WaylandPointer::OnButtonNotify no focused window ";
+    return;
+  }
+  if (!window->ShellSurface()->CanAcceptSeatEvents(seat->GetName().c_str())) {
+    LOG(ERROR) << "JACOBOOOOOOO: WaylandPointer::OnButtonNotify rejected ";
+    return;
+  }
+  else {
+    LOG(ERROR) << "JACOBOOOOOOO: WaylandPointer::OnButtonNotify accepted ";
+  }
 
   if (seat->GetFocusWindowHandle() && seat->GetGrabButton() == 0 &&
         state == WL_POINTER_BUTTON_STATE_PRESSED)

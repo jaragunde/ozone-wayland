@@ -127,6 +127,10 @@ bool XDGShellSurface::IsMinimized() const {
   return minimized_;
 }
 
+bool XDGShellSurface::CanAcceptSeatEvents(const char* seat_name) {
+  return true;
+}
+  
 void XDGShellSurface::HandleConfigure(void* data,
                                       struct xdg_surface* xdg_surface,
                                       int32_t width,

@@ -102,6 +102,10 @@ bool WLShellSurface::IsMinimized() const {
   return false;
 }
 
+bool WLShellSurface::CanAcceptSeatEvents(const char* seat_name) {
+  return true;
+}
+
 void WLShellSurface::HandleConfigure(void* data,
                                      struct wl_shell_surface* surface,
                                      uint32_t edges,

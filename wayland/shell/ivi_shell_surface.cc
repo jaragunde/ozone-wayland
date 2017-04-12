@@ -68,5 +68,12 @@ bool IVIShellSurface::IsMinimized() const {
   return false;
 }
 
+bool IVIShellSurface::CanAcceptSeatEvents(const char* seat_name) {
+  if (ivi_surface_id_ == 7001 && strcmp(seat_name, "seat_1") == 0)
+    return true;
+  if (ivi_surface_id_ == 7002 && strcmp(seat_name, "seat_2") == 0)
+    return true;
+  return false;
+}
 
 }  // namespace ozonewayland
