@@ -94,6 +94,12 @@ void WaylandKeyboard::OnKeyboardEnter(void* data,
                                       wl_surface* surface,
                                       wl_array* keys) {
   WaylandDisplay::GetInstance()->SetSerial(serial);
+  WaylandKeyboard* device = static_cast<WaylandKeyboard*>(data);
+  WaylandSeat* seat = device->seat_;
+  WaylandWindow* window =
+    static_cast<WaylandWindow*>(wl_surface_get_user_data(surface));
+  unsigned handle = window->Handle();
+  seat->SetFocusWindowHandle(handle);
 }
 
 void WaylandKeyboard::OnKeyboardLeave(void* data,
