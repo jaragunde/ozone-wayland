@@ -15,6 +15,8 @@ class OzoneWaylandSeat {
 
   ~OzoneWaylandSeat();
 
+  bool ContainsDevice(uint32_t device_id);
+
  private:
   const std::string name_;
   std::vector<uint32_t> device_ids_;

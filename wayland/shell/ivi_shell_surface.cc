@@ -43,6 +43,8 @@ void IVIShellSurface::InitializeShellSurface(WaylandWindow* window,
   last_ivi_surface_id_ = ivi_surface_id_;
 
   DCHECK(ivi_surface_);
+
+  window_handle_ = window->Handle();
 }
 
 void IVIShellSurface::UpdateShellSurface(WaylandWindow::ShellType type,
@@ -69,10 +71,18 @@ bool IVIShellSurface::IsMinimized() const {
 }
 
 bool IVIShellSurface::CanAcceptSeatEvents(const char* seat_name) {
-  if (ivi_surface_id_ == 7001 && strcmp(seat_name, "seat_1") == 0)
+  LOG(ERROR) << "CanAcceptSeatEvents: " << seat_name;
+  LOG(ERROR) << "CanAcceptSeatEvents: " << window_handle_;
+  WaylandDisplay* display = WaylandDisplay::GetInstance();
+  //TODO: placeholder for seat acceptance
+  if (ivi_surface_id_ == 7001 && strcmp(seat_name, "seat_1") == 0) {
+    display->SeatAssignmentChanged(seat_name, window_handle_);
     return true;
-  if (ivi_surface_id_ == 7002 && strcmp(seat_name, "seat_2") == 0)
+  }
+  if (ivi_surface_id_ == 7002 && strcmp(seat_name, "seat_2") == 0) {
+    display->SeatAssignmentChanged(seat_name, window_handle_);
     return true;
+  }
   return false;
 }
 

@@ -130,6 +130,8 @@ class WindowManagerWayland
 
   void SeatCreated(const std::string name,
                    std::vector<uint32_t> device_ids);
+  void SeatAssignmentChanged(const std::string seat_name,
+                             unsigned windowhandle);
 
   void InitializeXKB(base::SharedMemoryHandle fd, uint32_t size);
   // PlatformEventSource:

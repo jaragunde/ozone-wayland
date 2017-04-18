@@ -36,6 +36,7 @@ class IVIShellSurface : public WaylandShellSurface {
   ivi_surface* ivi_surface_;
   int ivi_surface_id_;
   static int last_ivi_surface_id_;
+  unsigned window_handle_;
   DISALLOW_COPY_AND_ASSIGN(IVIShellSurface);
 };
 

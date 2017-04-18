@@ -19,6 +19,7 @@ namespace ui {
 
 class BitmapCursorOzone;
 class OzoneGpuPlatformSupportHost;
+class OzoneWaylandSeat;
 class PlatformWindowDelegate;
 class WindowManagerWayland;
 
@@ -70,6 +71,8 @@ class OzoneWaylandWindow : public PlatformWindow,
   void OnGpuThreadReady() override;
   void OnGpuThreadRetired() override;
 
+  void SetAssignedSeat(OzoneWaylandSeat* seat) { assigned_seat_ = seat; }
+
  private:
   void SendWidgetState();
   void AddRegion();
@@ -78,6 +81,7 @@ class OzoneWaylandWindow : public PlatformWindow,
   void ValidateBounds();
   PlatformWindowDelegate* delegate_;   // Not owned.
   OzoneGpuPlatformSupportHost* sender_;  // Not owned.
+  OzoneWaylandSeat* assigned_seat_;  // Not owned.
   WindowManagerWayland* window_manager_;  // Not owned.
   bool transparent_;
   gfx::Rect bounds_;

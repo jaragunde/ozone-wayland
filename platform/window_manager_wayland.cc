@@ -269,6 +269,7 @@ bool WindowManagerWayland::OnMessageReceived(const IPC::Message& message) {
   IPC_MESSAGE_HANDLER(WaylandInput_DragMotion, DragMotion)
   IPC_MESSAGE_HANDLER(WaylandInput_DragDrop, DragDrop)
   IPC_MESSAGE_HANDLER(WaylandInput_SeatCreated, SeatCreated)
+  IPC_MESSAGE_HANDLER(WaylandInput_SeatAssignmentChanged, SeatAssignmentChanged)
   IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
@@ -444,6 +445,15 @@ void WindowManagerWayland::SeatCreated(const std::string name,
                                        std::vector<uint32_t> device_ids) {
   OzoneWaylandSeat* seat = new OzoneWaylandSeat(name, device_ids);
   seats_[name] = seat;
+}
+
+void WindowManagerWayland::SeatAssignmentChanged(const std::string seat_name,
+                                                 unsigned windowhandle) {
+  LOG(ERROR) << "SeatAssignmentChanged: " << seat_name << "-> " << windowhandle;
+  OzoneWaylandWindow* window = GetWindow(windowhandle);
+  OzoneWaylandSeat* seat = seats_[seat_name];
+  if (seat && window)
+    window->SetAssignedSeat(seat);
 }
 
 void WindowManagerWayland::InitializeXKB(base::SharedMemoryHandle fd,

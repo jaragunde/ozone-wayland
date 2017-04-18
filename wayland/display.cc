@@ -788,6 +788,13 @@ void WaylandDisplay::SeatCreated(const std::string name,
   Dispatch(new WaylandInput_SeatCreated(name, device_ids));
 }
 
+void WaylandDisplay::SeatAssignmentChanged(const std::string seat_name,
+                                           unsigned windowhandle) {
+  LOG(ERROR) << "SeatAssignmentChanged: " << seat_name << "-> " << windowhandle;
+
+  Dispatch(new WaylandInput_SeatAssignmentChanged(seat_name, windowhandle));
+}
+
 void WaylandDisplay::Dispatch(IPC::Message* message) {
   if (!loop_) {
     deferred_messages_.push(message);

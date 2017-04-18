@@ -166,6 +166,8 @@ class WaylandDisplay : public ui::SurfaceFactoryOzone,
 
   void SeatCreated(const std::string name,
                    const std::vector<uint32_t> device_ids);
+  void SeatAssignmentChanged(const std::string seat_name,
+                             unsigned windowhandle);
 
 #if defined(ENABLE_DRM_SUPPORT)
   // DRM related.
