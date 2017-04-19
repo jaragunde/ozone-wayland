@@ -80,17 +80,6 @@ void WaylandPointer::OnButtonNotify(void* data,
   WaylandDisplay::GetInstance()->SetSerial(serial);
   WaylandSeat* seat = device->seat_;
   WaylandWindow* window = WaylandDisplay::GetInstance()->GetWindow(seat->GetFocusWindowHandle());
-  if (!window) {
-    LOG(ERROR) << "JACOBOOOOOOO: WaylandPointer::OnButtonNotify no focused window ";
-    return;
-  }
-  if (!window->ShellSurface()->CanAcceptSeatEvents(seat->GetName().c_str())) {
-    LOG(ERROR) << "JACOBOOOOOOO: WaylandPointer::OnButtonNotify rejected ";
-    return;
-  }
-  else {
-    LOG(ERROR) << "JACOBOOOOOOO: WaylandPointer::OnButtonNotify accepted ";
-  }
 
   if (seat->GetFocusWindowHandle() && seat->GetGrabButton() == 0 &&
         state == WL_POINTER_BUTTON_STATE_PRESSED)

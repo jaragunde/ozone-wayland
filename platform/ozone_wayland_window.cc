@@ -232,10 +232,10 @@ bool OzoneWaylandWindow::CanDispatchEvent(
     const ui::PlatformEvent& ne) {
   Event* event = static_cast<Event*>(ne);
   LOG(ERROR) << "CanDispatchEvent from device " << event->source_device_id();
-  if (assigned_seat_)
+  if (event->IsKeyEvent() && assigned_seat_)
     return assigned_seat_->ContainsDevice(event->source_device_id());
-  return window_manager_->event_grabber() == handle_;
-
+  //return window_manager_->event_grabber() == handle_;
+  return true;
 }
 
 uint32_t OzoneWaylandWindow::DispatchEvent(
