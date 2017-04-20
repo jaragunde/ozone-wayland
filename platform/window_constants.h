@@ -29,6 +29,16 @@ namespace ui {
       // (i.e. Wayland install the grab) by the Window.
     TOOLTIP = 4
   };
+struct PointerPosition {
+  PointerPosition(float x, float y)
+  : x(x), y(y) {}
+
+  PointerPosition()
+  : x(0), y(0) {}
+
+  float x;
+  float y;
+};
 
 }  // namespace ui
 

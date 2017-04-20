@@ -75,7 +75,7 @@ void WaylandTouchscreen::OnTouchDown(void *data,
 
   device->pointer_position_.SetPoint(sx, sy);
 
-  device->dispatcher_->TouchNotify(ui::ET_TOUCH_PRESSED, sx, sy, id, time);
+  device->dispatcher_->TouchNotify(ui::ET_TOUCH_PRESSED, sx, sy, id, time, device->device_id_);
 }
 
 void WaylandTouchscreen::OnTouchUp(void *data,
@@ -89,7 +89,8 @@ void WaylandTouchscreen::OnTouchUp(void *data,
 
   device->dispatcher_->TouchNotify(ui::ET_TOUCH_RELEASED,
                                    device->pointer_position_.x(),
-                                   device->pointer_position_.y(), id, time);
+                                   device->pointer_position_.y(),
+                                   id, time, device->device_id_);
 
   if (seat->GetGrabWindowHandle() && seat->GetGrabButton() == id)
     seat->SetGrabWindowHandle(0, 0);
@@ -113,7 +114,7 @@ void WaylandTouchscreen::OnTouchMotion(void *data,
     return;
   }
 
-  device->dispatcher_->TouchNotify(ui::ET_TOUCH_MOVED, sx, sy, id, time);
+  device->dispatcher_->TouchNotify(ui::ET_TOUCH_MOVED, sx, sy, id, time, device->device_id_);
 }
 
 void WaylandTouchscreen::OnTouchFrame(void *data,
@@ -130,7 +131,7 @@ void WaylandTouchscreen::OnTouchCancel(void *data,
                                    device->pointer_position_.x(),
                                    device->pointer_position_.y(),
                                    seat->GetGrabButton(),
-                                   0);
+                                   0, device->device_id_);
 
   if (seat->GetGrabWindowHandle() && seat->GetGrabButton() != 0)
     seat->SetGrabWindowHandle(0, 0);

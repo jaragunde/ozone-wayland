@@ -137,7 +137,8 @@ class WaylandDisplay : public ui::SurfaceFactoryOzone,
                    float x,
                    float y,
                    int32_t touch_id,
-                   uint32_t time_stamp);
+                   uint32_t time_stamp,
+                   int device_id);
 
   void OutputSizeChanged(unsigned width, unsigned height);
   void WindowResized(unsigned handle, unsigned width, unsigned height);

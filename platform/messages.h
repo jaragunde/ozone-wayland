@@ -33,6 +33,11 @@ IPC_ENUM_TRAITS_MAX_VALUE(ui::WidgetState,
 IPC_ENUM_TRAITS_MAX_VALUE(ui::WidgetType,
                           ui::TOOLTIP)
 
+IPC_STRUCT_TRAITS_BEGIN(ui::PointerPosition)
+  IPC_STRUCT_TRAITS_MEMBER(x)
+  IPC_STRUCT_TRAITS_MEMBER(y)
+IPC_STRUCT_TRAITS_END()
+
 //------------------------------------------------------------------------------
 // Browser Messages
 // These messages are from the GPU to the browser process.
@@ -65,10 +70,10 @@ IPC_MESSAGE_CONTROL5(WaylandInput_ButtonNotify,  // NOLINT(readability/fn_size)
 
 IPC_MESSAGE_CONTROL5(WaylandInput_TouchNotify,  // NOLINT(readability/fn_size)
                      ui::EventType /*type*/,
-                     float /*x*/,
-                     float /*y*/,
+                     ui::PointerPosition,
                      int32_t /*touch_id*/,
-                     uint32_t /*time_stamp*/)
+                     uint32_t /*time_stamp*/,
+                     int /*device_id*/)
 
 IPC_MESSAGE_CONTROL4(WaylandInput_AxisNotify,  // NOLINT(readability/fn_size)
                      float /*x*/,

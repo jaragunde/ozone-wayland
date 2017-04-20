@@ -32,6 +32,7 @@ namespace ui {
 class OzoneGpuPlatformSupportHost;
 class OzoneWaylandSeat;
 class OzoneWaylandWindow;
+struct PointerPosition;
 
 typedef std::map<std::string, OzoneWaylandSeat*> SeatMap;
 
@@ -104,10 +105,10 @@ class WindowManagerWayland
                         uint32_t key,
                         int device_id);
   void TouchNotify(EventType type,
-                   float x,
-                   float y,
+                   ui::PointerPosition position,
                    int32_t touch_id,
-                   uint32_t time_stamp);
+                   uint32_t time_stamp,
+                   int device_id);
   void CloseWidget(unsigned handle);
 
   void OutputSizeChanged(unsigned width, unsigned height);
@@ -163,7 +164,8 @@ class WindowManagerWayland
                         float x,
                         float y,
                         int32_t touch_id,
-                        uint32_t time_stamp);
+                        uint32_t time_stamp,
+                        int device_id);
   void NotifyOutputSizeChanged(unsigned width,
                                unsigned height);
 

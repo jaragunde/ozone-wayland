@@ -702,8 +702,9 @@ void WaylandDisplay::TouchNotify(ui::EventType type,
                                  float x,
                                  float y,
                                  int32_t touch_id,
-                                 uint32_t time_stamp) {
-  Dispatch(new WaylandInput_TouchNotify(type, x, y, touch_id, time_stamp));
+                                 uint32_t time_stamp,
+                                 int device_id) {
+  Dispatch(new WaylandInput_TouchNotify(type, ui::PointerPosition(x, y), touch_id, time_stamp, device_id));
 }
 
 void WaylandDisplay::OutputSizeChanged(unsigned width, unsigned height) {
