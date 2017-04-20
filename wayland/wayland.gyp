@@ -53,6 +53,7 @@
         'libraries': [
           '<!@(<(pkg-config) --libs-only-l <(wayland_packages))',
           '<!@(<(pkg-config) --libs-only-l gbm)',
+          '-lilmInput -lilmCommon',
         ],
       },
       'dependencies': [

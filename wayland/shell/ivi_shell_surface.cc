@@ -10,6 +10,10 @@
 #include "ozone/wayland/display.h"
 #include "ozone/wayland/protocol/ivi-application-client-protocol.h"
 #include "ozone/wayland/shell/shell.h"
+
+#include "ilm/ilm_common.h"
+#include "ilm/ilm_input.h"
+
 #define IVI_SURFACE_ID 7000
 
 namespace ozonewayland {
@@ -45,6 +49,13 @@ void IVIShellSurface::InitializeShellSurface(WaylandWindow* window,
   DCHECK(ivi_surface_);
 
   window_handle_ = window->Handle();
+
+  ilmErrorTypes ret_code = ilm_init();
+  const char* error_msg;
+  if (ret_code != ILM_SUCCESS) {
+    error_msg = ILM_ERROR_STRING(ret_code);
+    LOG(ERROR) << error_msg;
+  }
 }
 
 void IVIShellSurface::UpdateShellSurface(WaylandWindow::ShellType type,
@@ -74,16 +85,30 @@ bool IVIShellSurface::CanAcceptSeatEvents(const char* seat_name) {
   LOG(ERROR) << "CanAcceptSeatEvents: " << seat_name;
   LOG(ERROR) << "CanAcceptSeatEvents: " << window_handle_;
   WaylandDisplay* display = WaylandDisplay::GetInstance();
-  //TODO: placeholder for seat acceptance
-  if (ivi_surface_id_ == 7001 && strcmp(seat_name, "seat_1") == 0) {
-    display->SeatAssignmentChanged(seat_name, window_handle_);
-    return true;
+
+  t_ilm_uint num_seats;
+  t_ilm_string *seats = NULL;
+  const char* error_msg;
+  bool found = false;
+
+  ilmErrorTypes ret_code = ilm_getInputAcceptanceOn(ivi_surface_id_, &num_seats, &seats);
+  if (ret_code == ILM_SUCCESS) {
+    LOG(ERROR) << "Returned " << num_seats;
+    for (int i = 0; i < num_seats; ++i) {
+      LOG(ERROR) << "name: " << seats[i];
+      if (strcmp(reinterpret_cast<const char*>(seats[i]), seat_name) == 0) {
+        display->SeatAssignmentChanged(seat_name, window_handle_);
+        found = true;
+      }
+      free(seats[i]);
+    }
   }
-  if (ivi_surface_id_ == 7002 && strcmp(seat_name, "seat_2") == 0) {
-    display->SeatAssignmentChanged(seat_name, window_handle_);
-    return true;
+  else {
+    error_msg = ILM_ERROR_STRING(ret_code);
+    LOG(ERROR) << error_msg;
   }
-  return false;
+  free(seats);
+  return found;
 }
 
 }  // namespace ozonewayland
