@@ -791,8 +791,6 @@ void WaylandDisplay::SeatCreated(const std::string name,
 
 void WaylandDisplay::SeatAssignmentChanged(const std::string seat_name,
                                            unsigned windowhandle) {
-  LOG(ERROR) << "SeatAssignmentChanged: " << seat_name << "-> " << windowhandle;
-
   Dispatch(new WaylandInput_SeatAssignmentChanged(seat_name, windowhandle));
 }
 

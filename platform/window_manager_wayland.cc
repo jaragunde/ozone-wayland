@@ -449,7 +449,6 @@ void WindowManagerWayland::SeatCreated(const std::string name,
 
 void WindowManagerWayland::SeatAssignmentChanged(const std::string seat_name,
                                                  unsigned windowhandle) {
-  LOG(ERROR) << "SeatAssignmentChanged: " << seat_name << "-> " << windowhandle;
   OzoneWaylandWindow* window = GetWindow(windowhandle);
   OzoneWaylandSeat* seat = seats_[seat_name];
   if (seat && window)
