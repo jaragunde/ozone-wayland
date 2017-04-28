@@ -5,6 +5,7 @@
 #include "ozone/wayland/input/keyboard.h"
 #include "ozone/wayland/seat.h"
 #include "ozone/wayland/shell/shell_surface.h"
+#include <string>
 
 namespace ozonewayland {
 
@@ -47,11 +48,12 @@ void WaylandKeyboard::OnKeyNotify(void* data,
   WaylandKeyboard* device = static_cast<WaylandKeyboard*>(data);
   WaylandSeat* seat = device->seat_;
   WaylandWindow* window = WaylandDisplay::GetInstance()->GetWindow(seat->GetFocusWindowHandle());
+  std::string seat_name = seat->GetName();
   if (!window) {
     LOG(ERROR) << "WaylandKeyboard::OnKeyNotify no focused window ";
     return;
   }
-  if (!window->ShellSurface()->CanAcceptSeatEvents(seat->GetName().c_str())) {
+  if (!window->ShellSurface()->CanAcceptSeatEvents(seat_name.c_str())) {
     return;
   }
   ui::EventType type = ui::ET_KEY_PRESSED;
