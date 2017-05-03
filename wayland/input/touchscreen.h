@@ -59,6 +59,7 @@ class WaylandTouchscreen {
   struct wl_touch* wl_touch_;
   WaylandSeat* seat_;
   uint32_t device_id_;
+  int32_t touch_point_base_id_;
 
   DISALLOW_COPY_AND_ASSIGN(WaylandTouchscreen);
 };

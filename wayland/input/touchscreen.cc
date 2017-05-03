@@ -17,6 +17,9 @@ WaylandTouchscreen::WaylandTouchscreen()
   : dispatcher_(NULL),
     pointer_position_(0, 0),
     wl_touch_(NULL) {
+  static int32_t touch_point_base_id_static = 0;
+  touch_point_base_id_ = touch_point_base_id_static;
+  touch_point_base_id_static += 100;
 }
 
 WaylandTouchscreen::~WaylandTouchscreen() {
@@ -72,10 +75,11 @@ void WaylandTouchscreen::OnTouchDown(void *data,
 
   float sx = wl_fixed_to_double(x);
   float sy = wl_fixed_to_double(y);
+  uint32_t touch_point_id = id + device->touch_point_base_id_;
 
   device->pointer_position_.SetPoint(sx, sy);
 
-  device->dispatcher_->TouchNotify(ui::ET_TOUCH_PRESSED, sx, sy, id, time, device->device_id_);
+  device->dispatcher_->TouchNotify(ui::ET_TOUCH_PRESSED, sx, sy, touch_point_id, time, device->device_id_);
 }
 
 void WaylandTouchscreen::OnTouchUp(void *data,
@@ -86,11 +90,12 @@ void WaylandTouchscreen::OnTouchUp(void *data,
   WaylandTouchscreen* device = static_cast<WaylandTouchscreen*>(data);
   WaylandDisplay::GetInstance()->SetSerial(serial);
   WaylandSeat* seat = WaylandDisplay::GetInstance()->PrimarySeat();
+  uint32_t touch_point_id = id + device->touch_point_base_id_;
 
   device->dispatcher_->TouchNotify(ui::ET_TOUCH_RELEASED,
                                    device->pointer_position_.x(),
                                    device->pointer_position_.y(),
-                                   id, time, device->device_id_);
+                                   touch_point_id, time, device->device_id_);
 
   if (seat->GetGrabWindowHandle() && seat->GetGrabButton() == id)
     seat->SetGrabWindowHandle(0, 0);
@@ -106,6 +111,7 @@ void WaylandTouchscreen::OnTouchMotion(void *data,
   WaylandSeat* seat = WaylandDisplay::GetInstance()->PrimarySeat();
   float sx = wl_fixed_to_double(x);
   float sy = wl_fixed_to_double(y);
+  uint32_t touch_point_id = id + device->touch_point_base_id_;
 
   device->pointer_position_.SetPoint(sx, sy);
 
@@ -114,7 +120,7 @@ void WaylandTouchscreen::OnTouchMotion(void *data,
     return;
   }
 
-  device->dispatcher_->TouchNotify(ui::ET_TOUCH_MOVED, sx, sy, id, time, device->device_id_);
+  device->dispatcher_->TouchNotify(ui::ET_TOUCH_MOVED, sx, sy, touch_point_id, time, device->device_id_);
 }
 
 void WaylandTouchscreen::OnTouchFrame(void *data,
