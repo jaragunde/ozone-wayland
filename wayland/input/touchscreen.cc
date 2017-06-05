@@ -8,6 +8,7 @@
 
 #include "ozone/wayland/input/cursor.h"
 #include "ozone/wayland/seat.h"
+#include "ozone/wayland/shell/shell_surface.h"
 #include "ozone/wayland/window.h"
 #include "ui/events/event.h"
 
@@ -57,7 +58,8 @@ void WaylandTouchscreen::OnTouchDown(void *data,
                                      wl_fixed_t y) {
   WaylandTouchscreen* device = static_cast<WaylandTouchscreen*>(data);
   WaylandDisplay::GetInstance()->SetSerial(serial);
-  WaylandSeat* seat = WaylandDisplay::GetInstance()->PrimarySeat();
+  WaylandSeat* seat = device->seat_;
+  std::string seat_name = seat->GetName();
 
   // Need this code when the user clicks on a text input box directly
   if (!seat->GetPointer()) {
@@ -67,7 +69,16 @@ void WaylandTouchscreen::OnTouchDown(void *data,
     }
     WaylandWindow* window =
          static_cast<WaylandWindow*>(wl_surface_get_user_data(surface));
+    if (!window->ShellSurface()->CanAcceptSeatEvents(seat_name.c_str())) {
+      return;
+    }
     seat->SetFocusWindowHandle(window->Handle());
+  }
+  else {
+    WaylandWindow* window = WaylandDisplay::GetInstance()->GetWindow(seat->GetFocusWindowHandle());
+    if (!window || !window->ShellSurface()->CanAcceptSeatEvents(seat_name.c_str())) {
+      return;
+    }
   }
 
   if (seat->GetFocusWindowHandle() && seat->GetGrabButton() == 0)
@@ -89,7 +100,7 @@ void WaylandTouchscreen::OnTouchUp(void *data,
                                    int32_t id) {
   WaylandTouchscreen* device = static_cast<WaylandTouchscreen*>(data);
   WaylandDisplay::GetInstance()->SetSerial(serial);
-  WaylandSeat* seat = WaylandDisplay::GetInstance()->PrimarySeat();
+  WaylandSeat* seat = device->seat_;
   uint32_t touch_point_id = id + device->touch_point_base_id_;
 
   device->dispatcher_->TouchNotify(ui::ET_TOUCH_RELEASED,
@@ -108,7 +119,7 @@ void WaylandTouchscreen::OnTouchMotion(void *data,
                                       wl_fixed_t x,
                                       wl_fixed_t y) {
   WaylandTouchscreen* device = static_cast<WaylandTouchscreen*>(data);
-  WaylandSeat* seat = WaylandDisplay::GetInstance()->PrimarySeat();
+  WaylandSeat* seat = device->seat_;
   float sx = wl_fixed_to_double(x);
   float sy = wl_fixed_to_double(y);
   uint32_t touch_point_id = id + device->touch_point_base_id_;
@@ -131,7 +142,7 @@ void WaylandTouchscreen::OnTouchFrame(void *data,
 void WaylandTouchscreen::OnTouchCancel(void *data,
                                        struct wl_touch *wl_touch) {
   WaylandTouchscreen* device = static_cast<WaylandTouchscreen*>(data);
-  WaylandSeat* seat = WaylandDisplay::GetInstance()->PrimarySeat();
+  WaylandSeat* seat = device->seat_;
 
   device->dispatcher_->TouchNotify(ui::ET_TOUCH_CANCELLED,
                                    device->pointer_position_.x(),
