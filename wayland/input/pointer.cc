@@ -145,6 +145,7 @@ void WaylandPointer::OnPointerEnter(void* data,
                                     wl_fixed_t sy_w) {
   WaylandPointer* device = static_cast<WaylandPointer*>(data);
   WaylandSeat* seat = device->seat_;
+  std::string seat_name = seat->GetName();
 
   if (!surface) {
     seat->SetFocusWindowHandle(0);
@@ -153,6 +154,8 @@ void WaylandPointer::OnPointerEnter(void* data,
 
   WaylandWindow* window =
       static_cast<WaylandWindow*>(wl_surface_get_user_data(surface));
+  if (!window || !window->ShellSurface()->CanAcceptSeatEvents(seat_name.c_str()))
+      return;
   unsigned handle = window->Handle();
   float sx = wl_fixed_to_double(sx_w);
   float sy = wl_fixed_to_double(sy_w);
