@@ -686,6 +686,14 @@ void WaylandDisplay::PointerLeave(unsigned handle, float x, float y) {
   Dispatch(new WaylandInput_PointerLeave(handle, x, y));
 }
 
+void WaylandDisplay::KeyboardEnter(unsigned handle) {
+  Dispatch(new WaylandInput_KeyboardEnter(handle));
+}
+
+void WaylandDisplay::KeyboardLeave(unsigned handle) {
+  Dispatch(new WaylandInput_KeyboardLeave(handle));
+}
+
 void WaylandDisplay::KeyNotify(ui::EventType type,
                                unsigned code,
                                int device_id) {

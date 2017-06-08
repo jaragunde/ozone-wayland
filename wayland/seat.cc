@@ -19,6 +19,7 @@ namespace ozonewayland {
 WaylandSeat::WaylandSeat(WaylandDisplay* display,
                          uint32_t id)
     : focused_window_handle_(0),
+      keyboard_focused_window_handle_(0),
       grab_window_handle_(0),
       grab_button_(0),
       seat_(NULL),
@@ -96,6 +97,10 @@ void WaylandSeat::OnSeatName(void *data, wl_seat *seat, const char *name) {
 
 void WaylandSeat::SetFocusWindowHandle(unsigned windowhandle) {
   focused_window_handle_ = windowhandle;
+}
+
+void WaylandSeat::SetKeyboardFocusWindowHandle(unsigned windowhandle) {
+  keyboard_focused_window_handle_ = windowhandle;
   WaylandWindow* window = NULL;
   if (windowhandle)
     window = WaylandDisplay::GetInstance()->GetWindow(windowhandle);

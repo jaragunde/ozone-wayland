@@ -72,6 +72,8 @@ class OzoneWaylandWindow : public PlatformWindow,
   void OnGpuThreadRetired() override;
 
   void SetAssignedSeat(OzoneWaylandSeat* seat) { assigned_seat_ = seat; }
+  void SetKeyboardFocus(bool focus) { keyboard_focus_ = focus; }
+  void SetPointerFocus(bool focus) { pointer_focus_ = focus; }
 
  private:
   void SendWidgetState();
@@ -94,6 +96,8 @@ class OzoneWaylandWindow : public PlatformWindow,
   base::string16 title_;
   // The current cursor bitmap (immutable).
   scoped_refptr<BitmapCursorOzone> bitmap_;
+  bool keyboard_focus_;
+  bool pointer_focus_;
 
   DISALLOW_COPY_AND_ASSIGN(OzoneWaylandWindow);
 };

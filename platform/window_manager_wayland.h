@@ -65,9 +65,6 @@ class WindowManagerWayland
   // Unsets a given widget as the recipient for events.
   void UngrabEvents(gfx::AcceleratedWidget widget);
 
-  // Gets the current widget recipient of mouse events.
-  gfx::AcceleratedWidget event_grabber() const { return event_grabber_; }
-
  private:
   void OnActivationChanged(unsigned windowhandle, bool active);
   std::list<OzoneWaylandWindow*>& open_windows();
@@ -100,6 +97,8 @@ class WindowManagerWayland
                   int yoffset);
   void PointerEnter(unsigned handle, float x, float y);
   void PointerLeave(unsigned handle, float x, float y);
+  void KeyboardEnter(unsigned handle);
+  void KeyboardLeave(unsigned handle);
   void KeyNotify(EventType type, unsigned code, int device_id);
   void VirtualKeyNotify(EventType type,
                         uint32_t key,
@@ -160,6 +159,8 @@ class WindowManagerWayland
   void NotifyPointerLeave(unsigned handle,
                           float x,
                           float y);
+  void NotifyKeyboardEnter(unsigned handle);
+  void NotifyKeyboardLeave(unsigned handle);
   void NotifyTouchEvent(EventType type,
                         float x,
                         float y,
@@ -182,7 +183,6 @@ class WindowManagerWayland
   // List of all open aura::Window.
   std::list<OzoneWaylandWindow*>* open_windows_;
   SeatMap seats_;
-  gfx::AcceleratedWidget event_grabber_ = gfx::kNullAcceleratedWidget;
   OzoneWaylandWindow* active_window_;
   gfx::AcceleratedWidget current_capture_ = gfx::kNullAcceleratedWidget;
   OzoneGpuPlatformSupportHost* proxy_;

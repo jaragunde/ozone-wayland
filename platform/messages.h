@@ -155,6 +155,12 @@ IPC_MESSAGE_CONTROL2(WaylandInput_SeatAssignmentChanged,  // NOLINT(readability/
                      std::string /* seat_name */,
                      unsigned /* window handle */)
 
+IPC_MESSAGE_CONTROL1(WaylandInput_KeyboardEnter,  // NOLINT(readability/fn_size)
+                     unsigned /*handle*/)
+
+IPC_MESSAGE_CONTROL1(WaylandInput_KeyboardLeave,  // NOLINT(readability/fn_size)
+                     unsigned /*handle*/)
+
 //------------------------------------------------------------------------------
 // GPU Messages
 // These messages are from the Browser to the GPU process.

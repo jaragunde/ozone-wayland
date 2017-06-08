@@ -131,6 +131,8 @@ class WaylandDisplay : public ui::SurfaceFactoryOzone,
   void AxisNotify(float x, float y, int xoffset, int yoffset);
   void PointerEnter(unsigned handle, float x, float y);
   void PointerLeave(unsigned handle, float x, float y);
+  void KeyboardEnter(unsigned handle);
+  void KeyboardLeave(unsigned handle);
   void KeyNotify(ui::EventType type, unsigned code, int device_id);
   void VirtualKeyNotify(ui::EventType type, uint32_t key, int device_id);
   void TouchNotify(ui::EventType type,

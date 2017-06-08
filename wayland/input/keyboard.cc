@@ -47,7 +47,7 @@ void WaylandKeyboard::OnKeyNotify(void* data,
                                   uint32_t state) {
   WaylandKeyboard* device = static_cast<WaylandKeyboard*>(data);
   WaylandSeat* seat = device->seat_;
-  WaylandWindow* window = WaylandDisplay::GetInstance()->GetWindow(seat->GetFocusWindowHandle());
+  WaylandWindow* window = WaylandDisplay::GetInstance()->GetWindow(seat->GetKeyboardFocusWindowHandle());
   std::string seat_name = seat->GetName();
   if (!window) {
     LOG(ERROR) << "WaylandKeyboard::OnKeyNotify no focused window ";
@@ -97,7 +97,9 @@ void WaylandKeyboard::OnKeyboardEnter(void* data,
   WaylandWindow* window =
     static_cast<WaylandWindow*>(wl_surface_get_user_data(surface));
   unsigned handle = window->Handle();
-  seat->SetFocusWindowHandle(handle);
+  LOG(ERROR) << "OnKeyboardEnter: handle = " << handle;
+  seat->SetKeyboardFocusWindowHandle(handle);
+  device->dispatcher_->KeyboardEnter(handle);
 }
 
 void WaylandKeyboard::OnKeyboardLeave(void* data,
@@ -105,6 +107,13 @@ void WaylandKeyboard::OnKeyboardLeave(void* data,
                                       uint32_t serial,
                                       wl_surface* surface) {
   WaylandDisplay::GetInstance()->SetSerial(serial);
+  WaylandKeyboard* device = static_cast<WaylandKeyboard*>(data);
+  WaylandSeat* seat = device->seat_;
+  WaylandWindow* window =
+    static_cast<WaylandWindow*>(wl_surface_get_user_data(surface));
+  unsigned handle = window->Handle();
+  seat->SetKeyboardFocusWindowHandle(0);
+  device->dispatcher_->KeyboardLeave(handle);
 }
 
 void WaylandKeyboard::OnKeyModifiers(void *data,

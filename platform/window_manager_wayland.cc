@@ -61,9 +61,6 @@ void WindowManagerWayland::OnRootWindowClosed(
   if (active_window_ == window)
      active_window_ = NULL;
 
-  if (event_grabber_ == window->GetHandle())
-    event_grabber_ = gfx::kNullAcceleratedWidget;
-
   if (current_capture_ == window->GetHandle()) {
      OzoneWaylandWindow* window = GetWindow(current_capture_);
      window->GetDelegate()->OnLostCapture();
@@ -78,7 +75,6 @@ void WindowManagerWayland::OnRootWindowClosed(
 
 void WindowManagerWayland::Restore(OzoneWaylandWindow* window) {
   active_window_ = window;
-  event_grabber_  = window->GetHandle();
 }
 
 void WindowManagerWayland::OnPlatformScreenCreated(
@@ -109,7 +105,6 @@ void WindowManagerWayland::GrabEvents(gfx::AcceleratedWidget widget) {
   }
 
   current_capture_ = widget;
-  event_grabber_ = widget;
 }
 
 void WindowManagerWayland::UngrabEvents(gfx::AcceleratedWidget widget) {
@@ -117,7 +112,6 @@ void WindowManagerWayland::UngrabEvents(gfx::AcceleratedWidget widget) {
     return;
 
   current_capture_ = gfx::kNullAcceleratedWidget;
-  event_grabber_ = active_window_ ? active_window_->GetHandle() : 0;
 }
 
 OzoneWaylandWindow*
@@ -149,22 +143,16 @@ void WindowManagerWayland::OnActivationChanged(unsigned windowhandle,
     if (active_window_ && active_window_ == window)
         return;
 
-    if (current_capture_) {
-      event_grabber_ = windowhandle;
+    if (current_capture_)
       return;
-    }
 
     if (active_window_)
       active_window_->GetDelegate()->OnActivationChanged(false);
 
-    event_grabber_ = windowhandle;
     active_window_ = window;
     active_window_->GetDelegate()->OnActivationChanged(active);
   } else if (active_window_ == window) {
       active_window_->GetDelegate()->OnActivationChanged(active);
-      if (event_grabber_ == active_window_->GetHandle())
-         event_grabber_ = gfx::kNullAcceleratedWidget;
-
       active_window_ = NULL;
   }
 }
@@ -270,6 +258,8 @@ bool WindowManagerWayland::OnMessageReceived(const IPC::Message& message) {
   IPC_MESSAGE_HANDLER(WaylandInput_DragDrop, DragDrop)
   IPC_MESSAGE_HANDLER(WaylandInput_SeatCreated, SeatCreated)
   IPC_MESSAGE_HANDLER(WaylandInput_SeatAssignmentChanged, SeatAssignmentChanged)
+  IPC_MESSAGE_HANDLER(WaylandInput_KeyboardEnter, KeyboardEnter)
+  IPC_MESSAGE_HANDLER(WaylandInput_KeyboardLeave, KeyboardLeave)
   IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
@@ -320,6 +310,20 @@ void WindowManagerWayland::PointerLeave(unsigned handle,
       FROM_HERE,
       base::Bind(&WindowManagerWayland::NotifyPointerLeave,
           weak_ptr_factory_.GetWeakPtr(), handle, x, y));
+}
+
+void WindowManagerWayland::KeyboardEnter(unsigned handle) {
+  base::ThreadTaskRunnerHandle::Get()->PostTask(
+      FROM_HERE,
+      base::Bind(&WindowManagerWayland::NotifyKeyboardEnter,
+          weak_ptr_factory_.GetWeakPtr(), handle));
+}
+
+void WindowManagerWayland::KeyboardLeave(unsigned handle) {
+  base::ThreadTaskRunnerHandle::Get()->PostTask(
+      FROM_HERE,
+      base::Bind(&WindowManagerWayland::NotifyKeyboardLeave,
+          weak_ptr_factory_.GetWeakPtr(), handle));
 }
 
 void WindowManagerWayland::KeyNotify(EventType type,
@@ -535,10 +539,23 @@ void WindowManagerWayland::NotifyAxis(float x,
   DispatchEvent(&wheelev);
 }
 
+void WindowManagerWayland::NotifyKeyboardEnter(unsigned handle) {
+  LOG(ERROR) << "NotifyKeyboardEnter: handle = " << handle;
+  OzoneWaylandWindow* window = GetWindow(handle);
+  window->SetKeyboardFocus(true);
+}
+
+void WindowManagerWayland::NotifyKeyboardLeave(unsigned handle) {
+  OzoneWaylandWindow* window = GetWindow(handle);
+  window->SetKeyboardFocus(false);
+}
+
 void WindowManagerWayland::NotifyPointerEnter(unsigned handle,
                                                  float x,
                                                  float y) {
   OnWindowEnter(handle);
+  OzoneWaylandWindow* window = GetWindow(handle);
+  window->SetPointerFocus(true);
 
   gfx::Point position(x, y);
   MouseEvent mouseev(ET_MOUSE_ENTERED,
@@ -555,6 +572,8 @@ void WindowManagerWayland::NotifyPointerLeave(unsigned handle,
                                               float x,
                                               float y) {
   OnWindowLeave(handle);
+  OzoneWaylandWindow* window = GetWindow(handle);
+  window->SetPointerFocus(false);
 
   gfx::Point position(x, y);
   MouseEvent mouseev(ET_MOUSE_EXITED,

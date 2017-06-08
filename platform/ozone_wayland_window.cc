@@ -31,7 +31,9 @@ OzoneWaylandWindow::OzoneWaylandWindow(PlatformWindowDelegate* delegate,
       parent_(0),
       state_(UNINITIALIZED),
       region_(NULL),
-      cursor_type_(-1) {
+      cursor_type_(-1),
+      keyboard_focus_(false),
+      pointer_focus_(false) {
   static int opaque_handle = 0;
   opaque_handle++;
   handle_ = opaque_handle;
@@ -231,10 +233,11 @@ void OzoneWaylandWindow::ConfineCursorToBounds(const gfx::Rect& bounds) {
 bool OzoneWaylandWindow::CanDispatchEvent(
     const ui::PlatformEvent& ne) {
   Event* event = static_cast<Event*>(ne);
-  if (event->source_device_id()!=ui::ED_UNKNOWN_DEVICE && assigned_seat_)
-    return assigned_seat_->ContainsDevice(event->source_device_id());
-  //return window_manager_->event_grabber() == handle_;
-  return true;
+  if (event->IsMouseEvent() && assigned_seat_)
+    return pointer_focus_ && assigned_seat_->ContainsDevice(event->source_device_id());
+  if (event->IsKeyEvent() && assigned_seat_)
+    return keyboard_focus_ && assigned_seat_->ContainsDevice(event->source_device_id());
+  return false;
 }
 
 uint32_t OzoneWaylandWindow::DispatchEvent(
