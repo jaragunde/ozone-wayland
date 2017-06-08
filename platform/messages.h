@@ -58,15 +58,15 @@ IPC_MESSAGE_CONTROL3(  // NOLINT(readability/fn_size)
     int /*device_id*/)
 
 IPC_MESSAGE_CONTROL2(WaylandInput_MotionNotify,  // NOLINT(readability/fn_size)
-                     float /*x*/,
-                     float /*y*/)
+                     ui::PointerPosition /*x, y*/,
+                     int /*device_id*/)
 
 IPC_MESSAGE_CONTROL5(WaylandInput_ButtonNotify,  // NOLINT(readability/fn_size)
                      unsigned /*handle*/,
                      ui::EventType /*type*/,
                      ui::EventFlags /*flags*/,
-                     float /*x*/,
-                     float /*y*/)
+                     ui::PointerPosition /*x, y*/,
+                     int /*device_id*/)
 
 IPC_MESSAGE_CONTROL5(WaylandInput_TouchNotify,  // NOLINT(readability/fn_size)
                      ui::EventType /*type*/,
@@ -76,10 +76,10 @@ IPC_MESSAGE_CONTROL5(WaylandInput_TouchNotify,  // NOLINT(readability/fn_size)
                      int /*device_id*/)
 
 IPC_MESSAGE_CONTROL4(WaylandInput_AxisNotify,  // NOLINT(readability/fn_size)
-                     float /*x*/,
-                     float /*y*/,
+                     ui::PointerPosition /*x, y*/,
                      int /*x_offset*/,
-                     int /*y_offset*/)
+                     int /*y_offset*/,
+                     int /*device_id*/)
 
 IPC_MESSAGE_CONTROL3(WaylandInput_PointerEnter,  // NOLINT(readability/fn_size)
                      unsigned /*handle*/,

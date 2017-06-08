@@ -266,32 +266,32 @@ bool WindowManagerWayland::OnMessageReceived(const IPC::Message& message) {
   return handled;
 }
 
-void WindowManagerWayland::MotionNotify(float x, float y) {
+void WindowManagerWayland::MotionNotify(ui::PointerPosition position, int device_id) {
   base::ThreadTaskRunnerHandle::Get()->PostTask(
       FROM_HERE,
       base::Bind(&WindowManagerWayland::NotifyMotion,
-          weak_ptr_factory_.GetWeakPtr(), x, y));
+          weak_ptr_factory_.GetWeakPtr(), position.x, position.y, device_id));
 }
 
 void WindowManagerWayland::ButtonNotify(unsigned handle,
                                         EventType type,
                                         EventFlags flags,
-                                        float x,
-                                        float y) {
+                                        ui::PointerPosition position,
+                                        int device_id) {
   base::ThreadTaskRunnerHandle::Get()->PostTask(
       FROM_HERE,
       base::Bind(&WindowManagerWayland::NotifyButtonPress,
-          weak_ptr_factory_.GetWeakPtr(), handle, type, flags, x, y));
+          weak_ptr_factory_.GetWeakPtr(), handle, type, flags, position.x, position.y, device_id));
 }
 
-void WindowManagerWayland::AxisNotify(float x,
-                                      float y,
+void WindowManagerWayland::AxisNotify(ui::PointerPosition position,
                                       int xoffset,
-                                      int yoffset) {
+                                      int yoffset,
+                                      int device_id) {
   base::ThreadTaskRunnerHandle::Get()->PostTask(
       FROM_HERE,
       base::Bind(&WindowManagerWayland::NotifyAxis,
-          weak_ptr_factory_.GetWeakPtr(), x, y, xoffset, yoffset));
+          weak_ptr_factory_.GetWeakPtr(), position.x, position.y, xoffset, yoffset, device_id));
 }
 
 void WindowManagerWayland::PointerEnter(unsigned handle,
@@ -492,7 +492,8 @@ void WindowManagerWayland::OnDispatcherListChanged() {
 
 ////////////////////////////////////////////////////////////////////////////////
 void WindowManagerWayland::NotifyMotion(float x,
-                                        float y) {
+                                        float y,
+                                        int device_id) {
   gfx::Point position(x, y);
   MouseEvent mouseev(ET_MOUSE_MOVED,
                          position,
@@ -500,6 +501,7 @@ void WindowManagerWayland::NotifyMotion(float x,
                          EventTimeForNow(),
                          0,
                          0);
+  mouseev.set_source_device_id(device_id);
   DispatchEvent(&mouseev);
 }
 
@@ -507,7 +509,8 @@ void WindowManagerWayland::NotifyButtonPress(unsigned handle,
                                              EventType type,
                                              EventFlags flags,
                                              float x,
-                                             float y) {
+                                             float y,
+                                             int device_id) {
   gfx::Point position(x, y);
   MouseEvent mouseev(type,
                          position,
@@ -515,6 +518,7 @@ void WindowManagerWayland::NotifyButtonPress(unsigned handle,
                          EventTimeForNow(),
                          flags,
                          flags);
+  mouseev.set_source_device_id(device_id);
 
   DispatchEvent(&mouseev);
 
@@ -523,9 +527,10 @@ void WindowManagerWayland::NotifyButtonPress(unsigned handle,
 }
 
 void WindowManagerWayland::NotifyAxis(float x,
-                                         float y,
-                                         int xoffset,
-                                         int yoffset) {
+                                      float y,
+                                      int xoffset,
+                                      int yoffset,
+                                      int device_id) {
   gfx::Point position(x, y);
   MouseEvent mouseev(ET_MOUSEWHEEL,
                          position,
@@ -533,6 +538,7 @@ void WindowManagerWayland::NotifyAxis(float x,
                          EventTimeForNow(),
                          0,
                          0);
+  mouseev.set_source_device_id(device_id);
 
   MouseWheelEvent wheelev(mouseev, xoffset, yoffset);
 

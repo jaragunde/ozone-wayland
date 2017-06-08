@@ -122,13 +122,14 @@ class WaylandDisplay : public ui::SurfaceFactoryOzone,
   std::unique_ptr<ui::SurfaceOzoneCanvas> CreateCanvasForWidget(
       gfx::AcceleratedWidget widget) override;
 
-  void MotionNotify(float x, float y);
+  void MotionNotify(float x, float y, int device_id);
   void ButtonNotify(unsigned handle,
                     ui::EventType type,
                     ui::EventFlags flags,
                     float x,
-                    float y);
-  void AxisNotify(float x, float y, int xoffset, int yoffset);
+                    float y,
+                    int device_id);
+  void AxisNotify(float x, float y, int xoffset, int yoffset, int device_id);
   void PointerEnter(unsigned handle, float x, float y);
   void PointerLeave(unsigned handle, float x, float y);
   void KeyboardEnter(unsigned handle);

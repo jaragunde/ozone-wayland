@@ -85,16 +85,16 @@ class WindowManagerWayland
       const base::Callback<void(IPC::Message*)>& send_callback) override;
   void OnChannelDestroyed(int host_id) override;
   bool OnMessageReceived(const IPC::Message&) override;
-  void MotionNotify(float x, float y);
+  void MotionNotify(ui::PointerPosition position, int device_id);
   void ButtonNotify(unsigned handle,
                     EventType type,
                     EventFlags flags,
-                    float x,
-                    float y);
-  void AxisNotify(float x,
-                  float y,
+                    ui::PointerPosition position,
+                    int device_id);
+  void AxisNotify(ui::PointerPosition position,
                   int xoffset,
-                  int yoffset);
+                  int yoffset,
+                  int device_id);
   void PointerEnter(unsigned handle, float x, float y);
   void PointerLeave(unsigned handle, float x, float y);
   void KeyboardEnter(unsigned handle);
@@ -143,16 +143,19 @@ class WindowManagerWayland
   void PostUiEvent(Event* event);
 
   void NotifyMotion(float x,
-                    float y);
+                    float y,
+                    int device_id);
   void NotifyButtonPress(unsigned handle,
                          EventType type,
                          EventFlags flags,
                          float x,
-                         float y);
+                         float y,
+                         int device_id);
   void NotifyAxis(float x,
                   float y,
                   int xoffset,
-                  int yoffset);
+                  int yoffset,
+                  int device_id);
   void NotifyPointerEnter(unsigned handle,
                           float x,
                           float y);

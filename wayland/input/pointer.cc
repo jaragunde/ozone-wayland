@@ -67,7 +67,7 @@ void WaylandPointer::OnMotionNotify(void* data,
       return;
   }
 
-  device->dispatcher_->MotionNotify(sx, sy);
+  device->dispatcher_->MotionNotify(sx, sy, device->device_id_);
 }
 
 void WaylandPointer::OnButtonNotify(void* data,
@@ -103,7 +103,8 @@ void WaylandPointer::OnButtonNotify(void* data,
                                       type,
                                       flags,
                                       device->pointer_position_.x(),
-                                      device->pointer_position_.y());
+                                      device->pointer_position_.y(),
+                                      device->device_id_);
   }
 
   if (seat->GetGrabWindowHandle() && seat->GetGrabButton() == button &&
@@ -134,7 +135,8 @@ void WaylandPointer::OnAxisNotify(void* data,
   device->dispatcher_->AxisNotify(device->pointer_position_.x(),
                                   device->pointer_position_.y(),
                                   x_offset,
-                                  y_offset);
+                                  y_offset,
+                                  device->device_id_);
 }
 
 void WaylandPointer::OnPointerEnter(void* data,

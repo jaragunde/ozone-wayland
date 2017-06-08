@@ -659,23 +659,25 @@ IPC::MessageFilter* WaylandDisplay::GetMessageFilter() {
   return NULL;
 }
 
-void WaylandDisplay::MotionNotify(float x, float y) {
-  Dispatch(new WaylandInput_MotionNotify(x, y));
+void WaylandDisplay::MotionNotify(float x, float y, int device_id) {
+  Dispatch(new WaylandInput_MotionNotify(ui::PointerPosition(x, y), device_id));
 }
 
 void WaylandDisplay::ButtonNotify(unsigned handle,
                                   ui::EventType type,
                                   ui::EventFlags flags,
                                   float x,
-                                  float y) {
-  Dispatch(new WaylandInput_ButtonNotify(handle, type, flags, x, y));
+                                  float y,
+                                  int device_id) {
+  Dispatch(new WaylandInput_ButtonNotify(handle, type, flags, ui::PointerPosition(x, y), device_id));
 }
 
 void WaylandDisplay::AxisNotify(float x,
                                 float y,
                                 int xoffset,
-                                int yoffset) {
-  Dispatch(new WaylandInput_AxisNotify(x, y, xoffset, yoffset));
+                                int yoffset,
+                                int device_id) {
+  Dispatch(new WaylandInput_AxisNotify(ui::PointerPosition(x, y), xoffset, yoffset, device_id));
 }
 
 void WaylandDisplay::PointerEnter(unsigned handle, float x, float y) {
