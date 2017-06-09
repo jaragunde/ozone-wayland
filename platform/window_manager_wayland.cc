@@ -561,7 +561,8 @@ void WindowManagerWayland::NotifyPointerEnter(unsigned handle,
                                                  float y) {
   OnWindowEnter(handle);
   OzoneWaylandWindow* window = GetWindow(handle);
-  window->SetPointerFocus(true);
+  if (window)
+    window->SetPointerFocus(true);
 
   gfx::Point position(x, y);
   MouseEvent mouseev(ET_MOUSE_ENTERED,
@@ -579,7 +580,8 @@ void WindowManagerWayland::NotifyPointerLeave(unsigned handle,
                                               float y) {
   OnWindowLeave(handle);
   OzoneWaylandWindow* window = GetWindow(handle);
-  window->SetPointerFocus(false);
+  if (window)
+    window->SetPointerFocus(false);
 
   gfx::Point position(x, y);
   MouseEvent mouseev(ET_MOUSE_EXITED,
