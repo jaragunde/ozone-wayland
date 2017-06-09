@@ -233,8 +233,8 @@ void OzoneWaylandWindow::ConfineCursorToBounds(const gfx::Rect& bounds) {
 bool OzoneWaylandWindow::CanDispatchEvent(
     const ui::PlatformEvent& ne) {
   Event* event = static_cast<Event*>(ne);
-  if (event->IsMouseEvent() && assigned_seat_)
-    return pointer_focus_ && assigned_seat_->ContainsDevice(event->source_device_id());
+  if ((event->IsMouseEvent() || event->IsTouchEvent()) && assigned_seat_)
+    return assigned_seat_->ContainsDevice(event->source_device_id());
   if (event->IsKeyEvent() && assigned_seat_)
     return keyboard_focus_ && assigned_seat_->ContainsDevice(event->source_device_id());
   return false;
