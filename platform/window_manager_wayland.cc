@@ -546,7 +546,6 @@ void WindowManagerWayland::NotifyAxis(float x,
 }
 
 void WindowManagerWayland::NotifyKeyboardEnter(unsigned handle) {
-  LOG(ERROR) << "NotifyKeyboardEnter: handle = " << handle;
   OzoneWaylandWindow* window = GetWindow(handle);
   window->SetKeyboardFocus(true);
 }
@@ -603,7 +602,6 @@ void WindowManagerWayland::NotifyTouchEvent(EventType type,
   gfx::Point position(x, y);
   base::TimeTicks time_delta = ui::EventTimeForNow();
   time_delta += base::TimeDelta::FromMilliseconds(time_stamp);
-  LOG(ERROR) << "NotifyTouchEvent: touch_id=" << touch_id << " device_id=" << device_id;
   ui::TouchEvent touchev(type, position, touch_id, time_delta);
   touchev.set_source_device_id(device_id);
   DispatchEvent(&touchev);

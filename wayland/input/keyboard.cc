@@ -97,7 +97,6 @@ void WaylandKeyboard::OnKeyboardEnter(void* data,
   WaylandWindow* window =
     static_cast<WaylandWindow*>(wl_surface_get_user_data(surface));
   unsigned handle = window->Handle();
-  LOG(ERROR) << "OnKeyboardEnter: handle = " << handle;
   seat->SetKeyboardFocusWindowHandle(handle);
   device->dispatcher_->KeyboardEnter(handle);
 }
