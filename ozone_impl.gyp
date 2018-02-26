@@ -4,9 +4,6 @@
 # found in the LICENSE file.
 
 {
-   'includes': [
-       'ui/ui.gypi',
-    ],
   'targets': [
     {
       'target_name': 'wayland',
@@ -16,43 +13,36 @@
         '<(DEPTH)/base/third_party/dynamic_annotations/dynamic_annotations.gyp:dynamic_annotations',
         '<(DEPTH)/ui/events/ozone/events_ozone.gyp:events_ozone_evdev',
         '<(DEPTH)/ui/gfx/ipc/gfx_ipc.gyp:gfx_ipc',
-        'wayland/wayland.gyp:wayland_toolkit',
-        'webui'
+        '<(DEPTH)/ui/ozone/ozone.gyp:ozone_base',
+        '<(DEPTH)/ui/ozone/ozone.gyp:ozone_common',
+        'wayland/wayland.gyp:wayland_toolkit'
       ],
       'include_dirs': [
         '..',
       ],
-        'defines': [
+      'defines': [
         'OZONE_WAYLAND_IMPLEMENTATION',
       ],
       'sources': [
         'media/media_ozone_platform_wayland.cc',
         'media/media_ozone_platform_wayland.h',
-	'platform/client_native_pixmap_factory_wayland.cc',
-	'platform/client_native_pixmap_factory_wayland.h',
+        'platform/client_native_pixmap_factory_wayland.cc',
+        'platform/client_native_pixmap_factory_wayland.h',
         'platform/desktop_platform_screen.h',
-	'platform/desktop_platform_screen_delegate.h',
+        'platform/desktop_platform_screen_delegate.h',
         'platform/ozone_export_wayland.h',
-	'platform/messages.h',
-	'platform/message_generator.h',
-	'platform/message_generator.cc',
-	'platform/ozone_gpu_platform_support_host.h',
-	'platform/ozone_gpu_platform_support_host.cc',
+        'platform/messages.h',
+        'platform/message_generator.h',
+        'platform/message_generator.cc',
+        'platform/ozone_gpu_platform_support_host.h',
+        'platform/ozone_gpu_platform_support_host.cc',
         'platform/ozone_platform_wayland.cc',
         'platform/ozone_platform_wayland.h',
         'platform/ozone_wayland_window.cc',
         'platform/ozone_wayland_window.h',
-	'platform/window_constants.h',
+        'platform/window_constants.h',
         'platform/window_manager_wayland.cc',
         'platform/window_manager_wayland.h',
-        'ui/webui/file_picker_web_dialog.h',
-        'ui/webui/select_file_dialog_impl_webui.h',
-        'ui/webui/select_file_dialog_impl_webui.cc',
-        'ui/webui/ozone_webui.h',
-        'ui/webui/ozone_webui.cc',
-        'ui/webui/input_method_context_impl_wayland.h',
-        'ui/webui/input_method_context_impl_wayland.cc',
-
       ],
     },
   ]

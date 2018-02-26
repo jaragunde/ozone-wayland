@@ -7,12 +7,12 @@
 
 #include <string>
 #include "base/memory/ref_counted.h"
+#include "ozone/platform/channel_observer.h"
 #include "ozone/platform/window_constants.h"
 #include "third_party/skia/include/core/SkRegion.h"
 #include "ui/events/platform/platform_event_dispatcher.h"
 #include "ui/gfx/geometry/rect.h"
 #include "ui/gfx/native_widget_types.h"
-#include "ui/ozone/platform/drm/host/gpu_thread_observer.h"
 #include "ui/platform_window/platform_window.h"
 
 namespace ui {
@@ -24,7 +24,7 @@ class WindowManagerWayland;
 
 class OzoneWaylandWindow : public PlatformWindow,
                            public PlatformEventDispatcher,
-                           public GpuThreadObserver {
+                           public ChannelObserver {
  public:
   OzoneWaylandWindow(PlatformWindowDelegate* delegate,
                      OzoneGpuPlatformSupportHost* sender,
@@ -51,6 +51,7 @@ class OzoneWaylandWindow : public PlatformWindow,
   void Show() override;
   void Hide() override;
   void Close() override;
+  void PrepareForShutdown() override;
   void SetCapture() override;
   void ReleaseCapture() override;
   void ToggleFullscreen() override;
@@ -66,11 +67,12 @@ class OzoneWaylandWindow : public PlatformWindow,
   bool CanDispatchEvent(const PlatformEvent& event) override;
   uint32_t DispatchEvent(const PlatformEvent& event) override;
 
-  // GpuThreadObserver:
-  void OnGpuThreadReady() override;
-  void OnGpuThreadRetired() override;
+  // ChannelObserver:
+  void OnGpuProcessLaunched() override;
+  void OnChannelDestroyed() override;
 
  private:
+  void DeferredSendingToGpu();
   void SendWidgetState();
   void AddRegion();
   void ResetRegion();
@@ -86,10 +88,10 @@ class OzoneWaylandWindow : public PlatformWindow,
   ui::WidgetType type_;
   ui::WidgetState state_;
   SkRegion* region_;
-  int cursor_type_;
   base::string16 title_;
   // The current cursor bitmap (immutable).
   scoped_refptr<BitmapCursorOzone> bitmap_;
+  bool init_window_;
 
   DISALLOW_COPY_AND_ASSIGN(OzoneWaylandWindow);
 };

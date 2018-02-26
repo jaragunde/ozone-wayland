@@ -158,7 +158,7 @@ std::unique_ptr<VaapiWrapper> VaapiWrapper::Create(
   std::unique_ptr<VaapiWrapper> vaapi_wrapper(new VaapiWrapper());
   if (vaapi_wrapper->VaInitialize(report_error_to_uma_cb)) {
     if (vaapi_wrapper->Initialize(mode, va_profile))
-      return vaapi_wrapper;
+      return vaapi_wrapper.Pass();
   }
   LOG(ERROR) << "Failed to create VaapiWrapper for va_profile: " << va_profile;
   return nullptr;
@@ -172,7 +172,7 @@ std::unique_ptr<VaapiWrapper> VaapiWrapper::CreateForVideoCodec(
   VAProfile va_profile = ProfileToVAProfile(profile, mode);
   std::unique_ptr<VaapiWrapper> vaapi_wrapper =
       Create(mode, va_profile, report_error_to_uma_cb);
-  return vaapi_wrapper;
+  return vaapi_wrapper.Pass();
 }
 
 // static

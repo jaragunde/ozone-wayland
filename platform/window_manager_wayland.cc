@@ -46,22 +46,22 @@ void WindowManagerWayland::OnRootWindowCreated(
 void WindowManagerWayland::OnRootWindowClosed(
     OzoneWaylandWindow* window) {
   open_windows().remove(window);
+  if (active_window_ == window)
+     active_window_ = NULL;
+
+  if (event_grabber_ == gfx::AcceleratedWidget(window->GetHandle()))
+    event_grabber_ = gfx::kNullAcceleratedWidget;
+
+  if (current_capture_ == gfx::AcceleratedWidget(window->GetHandle())) {
+     OzoneWaylandWindow* window = GetWindow(current_capture_);
+     window->GetDelegate()->OnLostCapture();
+    current_capture_ = gfx::kNullAcceleratedWidget;
+  }
+
   if (open_windows().empty()) {
     delete open_windows_;
     open_windows_ = NULL;
     return;
-  }
-
-  if (active_window_ == window)
-     active_window_ = NULL;
-
-  if (event_grabber_ == window->GetHandle())
-    event_grabber_ = gfx::kNullAcceleratedWidget;
-
-  if (current_capture_ == window->GetHandle()) {
-     OzoneWaylandWindow* window = GetWindow(current_capture_);
-     window->GetDelegate()->OnLostCapture();
-    current_capture_ = gfx::kNullAcceleratedWidget;
   }
 
   // Set first top level window in the list of open windows as dispatcher.
@@ -156,7 +156,7 @@ void WindowManagerWayland::OnActivationChanged(unsigned windowhandle,
     active_window_->GetDelegate()->OnActivationChanged(active);
   } else if (active_window_ == window) {
       active_window_->GetDelegate()->OnActivationChanged(active);
-      if (event_grabber_ == active_window_->GetHandle())
+      if (event_grabber_ == gfx::AcceleratedWidget(active_window_->GetHandle()))
          event_grabber_ = gfx::kNullAcceleratedWidget;
 
       active_window_ = NULL;
@@ -231,9 +231,11 @@ void WindowManagerWayland::OnWindowActivated(unsigned windowhandle) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // GpuPlatformSupportHost implementation:
-void WindowManagerWayland::OnChannelEstablished(
-  int host_id, scoped_refptr<base::SingleThreadTaskRunner> send_runner,
-      const base::Callback<void(IPC::Message*)>& send_callback) {
+void WindowManagerWayland::OnGpuProcessLaunched(
+    int host_id,
+    scoped_refptr<base::SingleThreadTaskRunner> ui_runner,
+    scoped_refptr<base::SingleThreadTaskRunner> send_runner,
+    const base::Callback<void(IPC::Message*)>& send_callback) {
 }
 
 void WindowManagerWayland::OnChannelDestroyed(int host_id) {
@@ -440,15 +442,15 @@ void WindowManagerWayland::InitializeXKB(base::SharedMemoryHandle fd,
                                    size,
                                    PROT_READ,
                                    MAP_SHARED,
-                                   fd.fd,
+                                   fd.GetHandle(),
                                    0));
   if (map_str == MAP_FAILED)
     return;
 
   KeyboardLayoutEngineManager::GetKeyboardLayoutEngine()->
-      SetCurrentLayoutByName(map_str);
+      SetCurrentLayoutFromBuffer(map_str, strlen(map_str));
   munmap(map_str, size);
-  close(fd.fd);
+  close(fd.GetHandle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -501,7 +503,7 @@ void WindowManagerWayland::NotifyAxis(float x,
                                          int xoffset,
                                          int yoffset) {
   gfx::Point position(x, y);
-  MouseEvent mouseev(ET_MOUSEWHEEL,
+  MouseEvent mouseev(ET_UNKNOWN,
                          position,
                          position,
                          EventTimeForNow(),
@@ -551,9 +553,11 @@ void WindowManagerWayland::NotifyTouchEvent(EventType type,
                                             int32_t touch_id,
                                             uint32_t time_stamp) {
   gfx::Point position(x, y);
-  base::TimeTicks time_delta = ui::EventTimeForNow();
-  time_delta += base::TimeDelta::FromMilliseconds(time_stamp);
-  ui::TouchEvent touchev(type, position, touch_id, time_delta);
+  base::TimeTicks timestamp = ui::EventTimeForNow() + base::TimeDelta::FromMilliseconds(time_stamp);
+  TouchEvent touchev(type,
+                     position,
+                     timestamp,
+                     ui::PointerDetails(ui::EventPointerType::POINTER_TYPE_TOUCH, touch_id));
   DispatchEvent(&touchev);
 }
 

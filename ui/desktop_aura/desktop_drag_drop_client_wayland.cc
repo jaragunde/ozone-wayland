@@ -11,15 +11,14 @@
 #include "base/strings/string16.h"
 #include "base/strings/string_split.h"
 #include "base/strings/utf_string_conversions.h"
-#include "base/threading/thread_restrictions.h"
-#include "content/public/browser/browser_thread.h"
+#include "base/threading/thread_task_runner_handle.h"
 #include "ui/aura/window.h"
 #include "ui/aura/window_tree_host.h"
 #include "ui/base/clipboard/clipboard.h"
 #include "ui/base/dragdrop/drag_drop_types.h"
 #include "ui/base/dragdrop/drop_target_event.h"
 #include "ui/base/dragdrop/file_info.h"
-#include "ui/base/dragdrop/os_exchange_data_provider_aura.h"
+#include "ui/base/dragdrop/os_exchange_data_provider_factory.h"
 #include "ui/platform_window/platform_window.h"
 
 // TODO(mcatanzaro): Add support for accepting drags from GTK+ and Qt.
@@ -112,9 +111,8 @@ DesktopDragDropClientWayland::DragDataCollector::DragDataCollector(
     const std::vector<std::string>& mime_types,
     gfx::AcceleratedWidget windowhandle)
     : drag_drop_client_(drag_drop_client),
-      os_exchange_data_(new ui::OSExchangeDataProviderAura),
-      windowhandle_(windowhandle) {
-  std::copy(mime_types.begin(),
+      os_exchange_data_(ui::OSExchangeDataProviderFactory::CreateProvider()) {
+            std::copy(mime_types.begin(),
             mime_types.end(),
             std::insert_iterator<std::list<std::string>>(
                 unprocessed_mime_types_,
@@ -190,8 +188,7 @@ void DesktopDragDropClientWayland::DragDataCollector::ReadDragData(
   data_collector->unprocessed_mime_types_.erase(
       data_collector->unprocessed_mime_types_.begin());
 
-  content::BrowserThread::PostTask(
-      content::BrowserThread::UI,
+  base::ThreadTaskRunnerHandle::Get()->PostTask(
       FROM_HERE,
       base::Bind(
           &DesktopDragDropClientWayland::DragDataCollector::HandleNextMimeType,
@@ -240,16 +237,6 @@ int DesktopDragDropClientWayland::StartDragAndDrop(
     ui::DragDropTypes::DragEventSource source) {
   NOTIMPLEMENTED();
   return false;
-}
-
-void DesktopDragDropClientWayland::DragUpdate(aura::Window* target,
-                                              const ui::LocatedEvent& event) {
-  NOTIMPLEMENTED();
-}
-
-void DesktopDragDropClientWayland::Drop(aura::Window* target,
-                                        const ui::LocatedEvent& event) {
-  NOTIMPLEMENTED();
 }
 
 void DesktopDragDropClientWayland::DragCancel() {
@@ -321,10 +308,11 @@ void DesktopDragDropClientWayland::OnDragDataReceived(int pipefd) {
   }
 
   data_collector_->SetPipeFd(pipefd);
-  content::BrowserThread::PostTask(
-      content::BrowserThread::FILE_USER_BLOCKING,
+
+  base::ThreadTaskRunnerHandle::Get()->PostTask(
       FROM_HERE,
-      base::Bind(&DesktopDragDropClientWayland::DragDataCollector::ReadDragData,
+      base::Bind(
+          &DesktopDragDropClientWayland::DragDataCollector::ReadDragData,
                  data_collector_));
 }
 
@@ -382,7 +370,7 @@ void DesktopDragDropClientWayland::OnDragDrop() {
     // transferred from the source process. If so, we must delay the emission
     // of the drop event until the data is available.
     delayed_drop_location_.reset(new gfx::Point(point_.x(), point_.y()));
-    root_window_.GetHost()->ConvertPointFromNativeScreen(
+    root_window_.GetHost()->ConvertScreenInPixelsToDIP(
         delayed_drop_location_.get());
   }
 }
@@ -430,7 +418,7 @@ void DesktopDragDropClientWayland::OnDragDataCollected(
   }
 
   gfx::Point root_location(point_.x(), point_.y());
-  root_window_.GetHost()->ConvertPointFromNativeScreen(&root_location);
+  root_window_.GetHost()->ConvertScreenInPixelsToDIP(&root_location);
 
   target_window_ = root_window_.GetEventHandlerForPoint(root_location);
   if (!target_window_)
@@ -477,7 +465,7 @@ DesktopDragDropClientWayland::CreateDropTargetEvent(
   int drag_operations = ui::DragDropTypes::DRAG_COPY;
 
   gfx::Point target_location = root_location;
-  target_window_->GetHost()->ConvertPointToHost(&target_location);
+  target_window_->GetHost()->ConvertDIPToScreenInPixels(&target_location);
   aura::Window::ConvertPointToTarget(&root_window_,
                                      target_window_,
                                      &target_location);
@@ -492,7 +480,7 @@ DesktopDragDropClientWayland::CreateDropTargetEvent(
 std::unique_ptr<ui::DropTargetEvent>
 DesktopDragDropClientWayland::CreateDropTargetEvent() const {
   gfx::Point root_location(point_.x(), point_.y());
-  root_window_.GetHost()->ConvertPointFromNativeScreen(&root_location);
+  root_window_.GetHost()->ConvertScreenInPixelsToDIP(&root_location);
 
   return CreateDropTargetEvent(root_location);
 }
@@ -505,6 +493,16 @@ void DesktopDragDropClientWayland::DragDropSessionCompleted() {
     target_window_->RemoveObserver(this);
     target_window_ = nullptr;
   }
+}
+
+void DesktopDragDropClientWayland::AddObserver(
+    aura::client::DragDropClientObserver* observer) {
+  NOTIMPLEMENTED();
+}
+
+void DesktopDragDropClientWayland::RemoveObserver(
+    aura::client::DragDropClientObserver* observer) {
+  NOTIMPLEMENTED();
 }
 
 }  // namespace views

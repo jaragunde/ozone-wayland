@@ -83,7 +83,7 @@ void WLShellSurface::UpdateShellSurface(WaylandWindow::ShellType type,
 }
 
 void WLShellSurface::SetWindowTitle(const base::string16& title) {
-  wl_shell_surface_set_title(shell_surface_, UTF16ToUTF8(title).c_str());
+  wl_shell_surface_set_title(shell_surface_, base::UTF16ToUTF8(title).c_str());
   WaylandShellSurface::FlushDisplay();
 }
 

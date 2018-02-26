@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "chrome/browser/ui/views/tabs/window_finder.h"
-#include "ozone/ui/desktop_aura/desktop_window_tree_host_ozone.h"
+#include "ozone/ui/desktop_aura/desktop_window_tree_host_ozone_wayland.h"
 
 namespace ui {
 
@@ -18,7 +18,7 @@ VIEWS_EXPORT bool GetCustomFramePrefDefault() {
 
 }  // namespace ui
 
-VIEWS_EXPORT bool IsFullScreenMode() {
+VIEWS_EXPORT bool IsFullScreenMode(int64_t display_id) {
   std::vector<aura::Window*> all_windows =
       views::DesktopWindowTreeHostOzone::GetAllOpenWindows();
   // Only the topmost window is checked. This works fine in the most cases, but
@@ -30,13 +30,4 @@ VIEWS_EXPORT bool IsFullScreenMode() {
   views::Widget* widget =
       views::Widget::GetWidgetForNativeWindow(all_windows[0]);
   return widget && widget->IsFullscreen();
-}
-
-// TODO(Kalyan): Remove this once https://codereview.chromium.org/176893002/
-// is fixed.
-VIEWS_EXPORT gfx::NativeWindow GetLocalProcessWindowAtPoint(
-    const gfx::Point& screen_point,
-    const std::set<gfx::NativeWindow>& ignore,
-    gfx::NativeWindow source) {
-  return NULL;
 }

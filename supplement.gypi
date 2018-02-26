@@ -5,12 +5,12 @@
 
 {
   'variables':  {
-    'ozone_platform_wayland%': 1,
+    'ozone_platform_wayland_external%': 1,
     'platform_list_txt_file': '<(SHARED_INTERMEDIATE_DIR)/ui/ozone/platform_list.txt',
     'desktop_factory_ozone_list_cc_file': '<(INTERMEDIATE_DIR)/ui/views/desktop_factory_ozone_list.cc',
   },
   'conditions': [
-    ['<(ozone_platform_wayland) == 1', {
+    ['<(ozone_platform_wayland_external)==1', {
       'variables':  {
         'external_ozone_platform_deps': [
           '<(DEPTH)/ozone/ozone_impl.gyp:wayland',

@@ -9,8 +9,11 @@
 
 #include "ozone/platform/desktop_platform_screen_delegate.h"
 #include "ui/display/display_change_notifier.h"
+#include "ui/display/display.h"
 #include "ui/display/screen.h"
+#include "ui/gfx/geometry/point.h"
 #include "ui/gfx/geometry/rect.h"
+#include "ui/gfx/native_widget_types.h"
 
 namespace aura {
 class Window;
@@ -33,13 +36,12 @@ class DesktopScreenWayland : public display::Screen,
 
  private:
   void SetGeometry(const gfx::Rect& geometry);
-  // Overridden from gfx::Screen:
+  // Overridden from display::Screen:
   gfx::Point GetCursorScreenPoint() override;
   bool IsWindowUnderCursor(gfx::NativeWindow window) override;
-  gfx::NativeWindow GetWindowUnderCursor();
   gfx::NativeWindow GetWindowAtScreenPoint(const gfx::Point& point) override;
   int GetNumDisplays() const override;
-  std::vector<display::Display> GetAllDisplays() const override;
+  const std::vector<display::Display>& GetAllDisplays() const override;
   display::Display GetDisplayNearestWindow(gfx::NativeView window) const override;
   display::Display GetDisplayNearestPoint(const gfx::Point& point) const override;
   display::Display GetDisplayMatching(const gfx::Rect& match_rect) const override;

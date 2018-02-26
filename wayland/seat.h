@@ -8,7 +8,6 @@
 #include <wayland-client.h>
 #include <vector>
 
-#include "base/macros.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "ui/gfx/geometry/rect.h"
 
@@ -27,7 +26,9 @@ class WaylandSeat {
   ~WaylandSeat();
 
   wl_seat* GetWLSeat() const { return seat_; }
+#if defined(USE_DATA_DEVICE_MANAGER)
   WaylandDataDevice* GetDataDevice() const { return data_device_; }
+#endif
   WaylandKeyboard* GetKeyBoard() const { return input_keyboard_; }
   WaylandPointer* GetPointer() const { return input_pointer_; }
   unsigned GetFocusWindowHandle() const { return focused_window_handle_; }
@@ -54,7 +55,9 @@ class WaylandSeat {
   unsigned grab_window_handle_;
   uint32_t grab_button_;
   struct wl_seat* seat_;
+#if defined(USE_DATA_DEVICE_MANAGER)
   WaylandDataDevice* data_device_;
+#endif
   WaylandKeyboard* input_keyboard_;
   WaylandPointer* input_pointer_;
   WaylandTouchscreen* input_touch_;

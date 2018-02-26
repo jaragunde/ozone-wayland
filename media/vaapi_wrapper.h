@@ -173,7 +173,7 @@ class CONTENT_EXPORT VaapiWrapper {
   // to the encode job.
   bool DownloadAndDestroyCodedBuffer(VABufferID buffer_id,
                                      VASurfaceID sync_surface_id,
-                                     uint8_t* target_ptr,
+                                     uint8* target_ptr,
                                      size_t target_size,
                                      size_t* coded_data_size);
 

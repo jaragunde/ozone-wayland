@@ -15,8 +15,14 @@
 #include "ui/base/dragdrop/os_exchange_data.h"
 #include "ui/gfx/geometry/point.h"
 #include "ui/views/views_export.h"
-#include "ui/wm/public/drag_drop_client.h"
-#include "ui/wm/public/drag_drop_delegate.h"
+#include "ui/aura/client/drag_drop_client.h"
+#include "ui/aura/client/drag_drop_delegate.h"
+
+namespace aura {
+namespace client {
+class DragDropClientObserver;
+}
+}
 
 namespace ui {
 
@@ -41,12 +47,10 @@ class VIEWS_EXPORT DesktopDragDropClientWayland
                        const gfx::Point& root_location,
                        int operation,
                        ui::DragDropTypes::DragEventSource source) override;
-  void DragUpdate(aura::Window* target,
-                  const ui::LocatedEvent& event) override;
-  void Drop(aura::Window* target,
-            const ui::LocatedEvent& event) override;
   void DragCancel() override;
   bool IsDragDropInProgress() override;
+  void AddObserver(aura::client::DragDropClientObserver* observer) override;
+  void RemoveObserver(aura::client::DragDropClientObserver* observer) override;
 
   // Overridden from void aura::WindowObserver:
   void OnWindowDestroying(aura::Window* window) override;
@@ -118,7 +122,6 @@ class VIEWS_EXPORT DesktopDragDropClientWayland
     ui::OSExchangeData os_exchange_data_;
     std::list<std::string> unprocessed_mime_types_;
     std::string first_received_mime_type_;
-    int windowhandle_;
     int pipefd_ = 0;
   };
 

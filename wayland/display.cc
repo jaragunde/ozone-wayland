@@ -22,9 +22,10 @@
 #include "base/stl_util.h"
 #include "ipc/ipc_sender.h"
 #include "ozone/platform/messages.h"
+#if defined(USE_DATA_DEVICE_MANAGER)
 #include "ozone/wayland/data_device.h"
+#endif
 #include "ozone/wayland/display_poll_thread.h"
-#include "ozone/wayland/egl/surface_ozone_wayland.h"
 #if defined(ENABLE_DRM_SUPPORT)
 #include "ozone/wayland/egl/wayland_pixmap.h"
 #endif
@@ -37,7 +38,9 @@
 #include "ozone/wayland/seat.h"
 #include "ozone/wayland/shell/shell.h"
 #include "ozone/wayland/window.h"
-#include "ui/ozone/public/native_pixmap.h"
+#include "ui/gfx/native_pixmap.h"
+#include "ui/ozone/common/egl_util.h"
+#include "ui/ozone/common/gl_ozone_egl.h"
 #include "ui/ozone/public/surface_ozone_canvas.h"
 
 #if defined(ENABLE_DRM_SUPPORT)
@@ -76,6 +79,54 @@ static const struct wl_drm_listener drm_listener = {
 #endif
 
 namespace ozonewayland {
+
+class GLOzoneEGLWayland : public ui::GLOzoneEGL {
+ public:
+  GLOzoneEGLWayland(WaylandDisplay* display) : display_(display) {}
+  ~GLOzoneEGLWayland() override {}
+
+  scoped_refptr<gl::GLSurface> CreateViewGLSurface(
+      gfx::AcceleratedWidget widget) override;
+
+  scoped_refptr<gl::GLSurface> CreateOffscreenGLSurface(
+      const gfx::Size& size) override;
+
+ protected:
+  intptr_t GetNativeDisplay() override;
+  bool LoadGLES2Bindings(gl::GLImplementation) override;
+
+ private:
+  WaylandDisplay* display_;
+
+  DISALLOW_COPY_AND_ASSIGN(GLOzoneEGLWayland);
+};
+
+scoped_refptr<gl::GLSurface> GLOzoneEGLWayland::CreateViewGLSurface(
+    gfx::AcceleratedWidget widget) {
+  return gl::InitializeGLSurface(new GLSurfaceWayland(widget));
+}
+
+scoped_refptr<gl::GLSurface> GLOzoneEGLWayland::CreateOffscreenGLSurface(
+    const gfx::Size& size) {
+  if (gl::GLSurfaceEGL::IsEGLSurfacelessContextSupported() &&
+      size.width() == 0 && size.height() == 0) {
+    return gl::InitializeGLSurface(new gl::SurfacelessEGL(size));
+  } else {
+    return gl::InitializeGLSurface(new gl::PbufferGLSurfaceEGL(size));
+  }
+}
+
+intptr_t GLOzoneEGLWayland::GetNativeDisplay() {
+  return reinterpret_cast<intptr_t>(display_->display());
+}
+
+bool GLOzoneEGLWayland::LoadGLES2Bindings(gl::GLImplementation impl) {
+  if (!display_->display())
+    return false;
+  setenv("EGL_PLATFORM", "wayland", 0);
+  return ui::LoadDefaultEGLGLES2Bindings(impl);
+}
+
 WaylandDisplay* WaylandDisplay::instance_ = NULL;
 
 WaylandDisplay::WaylandDisplay() : SurfaceFactoryOzone(),
@@ -89,8 +140,10 @@ WaylandDisplay::WaylandDisplay() : SurfaceFactoryOzone(),
     primary_screen_(NULL),
     primary_seat_(NULL),
     display_poll_thread_(NULL),
+#if defined(ENABLE_DRM_SUPPORT)
     device_(NULL),
     m_deviceName(NULL),
+#endif
     sender_(NULL),
     loop_(NULL),
     screen_list_(),
@@ -98,9 +151,12 @@ WaylandDisplay::WaylandDisplay() : SurfaceFactoryOzone(),
     widget_map_(),
     serial_(0),
     processing_events_(false),
+#if defined(ENABLE_DRM_SUPPORT)
     m_authenticated_(false),
     m_fd_(-1),
     m_capabilities_(0),
+#endif
+    egl_implementation_(new GLOzoneEGLWayland(this)),
     weak_ptr_factory_(this) {
 }
 
@@ -125,21 +181,23 @@ void WaylandDisplay::FlushDisplay() {
 }
 
 void WaylandDisplay::DestroyWindow(unsigned w) {
-  std::map<unsigned, WaylandWindow*>::const_iterator it = widget_map_.find(w);
-  WaylandWindow* widget = it == widget_map_.end() ? NULL : it->second;
-  DCHECK(widget);
-  delete widget;
   widget_map_.erase(w);
-  if (widget_map_.empty())
-    StopProcessingEvents();
 }
 
-gfx::AcceleratedWidget WaylandDisplay::GetNativeWindow(unsigned window_handle) {
+intptr_t WaylandDisplay::GetNativeWindow(unsigned window_handle) {
   WaylandWindow* widget = GetWidget(window_handle);
   DCHECK(widget);
   widget->RealizeAcceleratedWidget();
 
-  return (gfx::AcceleratedWidget)widget->egl_window();
+  return reinterpret_cast<intptr_t>(widget->egl_window());
+}
+
+wl_egl_window* WaylandDisplay::GetEglWindow(
+    unsigned window_handle) {
+  WaylandWindow* widget = GetWidget(window_handle);
+  DCHECK(widget);
+  widget->RealizeAcceleratedWidget();
+  return widget->egl_window();
 }
 
 bool WaylandDisplay::InitializeHardware() {
@@ -155,61 +213,7 @@ bool WaylandDisplay::InitializeHardware() {
   return true;
 }
 
-intptr_t WaylandDisplay::GetNativeDisplay() {
-  return (intptr_t)display_;
-}
-
-std::unique_ptr<ui::SurfaceOzoneEGL> WaylandDisplay::CreateEGLSurfaceForWidget(
-    gfx::AcceleratedWidget w) {
-  return std::unique_ptr<ui::SurfaceOzoneEGL>(new SurfaceOzoneWayland(w));
-}
-
-bool WaylandDisplay::LoadEGLGLES2Bindings(
-    ui::SurfaceFactoryOzone::AddGLLibraryCallback add_gl_library,
-    ui::SurfaceFactoryOzone::SetGLGetProcAddressProcCallback setprocaddress) {
-  // The variable EGL_PLATFORM specifies native platform to be used by the
-  // drivers (atleast on Mesa). When the variable is not set, Mesa uses the
-  // first platform listed in --with-egl-platforms during compilation. Thus, we
-  // ensure here that wayland is set as the native platform. However, we don't
-  // override the EGL_PLATFORM value in case it has already been set.
-  setenv("EGL_PLATFORM", "wayland", 0);
-  base::NativeLibraryLoadError error;
-  base::NativeLibrary gles_library = base::LoadNativeLibrary(
-    base::FilePath("libGLESv2.so.2"), &error);
-
-  if (!gles_library) {
-    LOG(WARNING) << "Failed to load GLES library: " << error.ToString();
-    return false;
-  }
-
-  base::NativeLibrary egl_library = base::LoadNativeLibrary(
-    base::FilePath("libEGL.so.1"), &error);
-
-  if (!egl_library) {
-    LOG(WARNING) << "Failed to load EGL library: " << error.ToString();
-    base::UnloadNativeLibrary(gles_library);
-    return false;
-  }
-
-  GLGetProcAddressProc get_proc_address =
-      reinterpret_cast<GLGetProcAddressProc>(
-          base::GetFunctionPointerFromNativeLibrary(
-              egl_library, "eglGetProcAddress"));
-
-  if (!get_proc_address) {
-    LOG(ERROR) << "eglGetProcAddress not found.";
-    base::UnloadNativeLibrary(egl_library);
-    base::UnloadNativeLibrary(gles_library);
-    return false;
-  }
-
-  setprocaddress.Run(get_proc_address);
-  add_gl_library.Run(egl_library);
-  add_gl_library.Run(gles_library);
-  return true;
-}
-
-scoped_refptr<ui::NativePixmap> WaylandDisplay::CreateNativePixmap(
+scoped_refptr<gfx::NativePixmap> WaylandDisplay::CreateNativePixmap(
     gfx::AcceleratedWidget widget,
     gfx::Size size,
     gfx::BufferFormat format,
@@ -228,6 +232,15 @@ scoped_refptr<ui::NativePixmap> WaylandDisplay::CreateNativePixmap(
 #endif
 }
 
+scoped_refptr<gfx::NativePixmap> WaylandDisplay::CreateNativePixmapFromHandle(
+    gfx::AcceleratedWidget widget,
+    gfx::Size size,
+    gfx::BufferFormat format,
+    const gfx::NativePixmapHandle& handle) {
+  NOTIMPLEMENTED();
+  return nullptr;
+}
+
 std::unique_ptr<ui::SurfaceOzoneCanvas> WaylandDisplay::CreateCanvasForWidget(
     gfx::AcceleratedWidget widget) {
   LOG(FATAL) << "The browser process has attempted to start the GPU process in "
@@ -244,6 +257,23 @@ std::unique_ptr<ui::SurfaceOzoneCanvas> WaylandDisplay::CreateCanvasForWidget(
 
   // This code will obviously never be reached, but it placates -Wreturn-type.
   return std::unique_ptr<ui::SurfaceOzoneCanvas>();
+}
+
+std::vector<gl::GLImplementation>
+WaylandDisplay::GetAllowedGLImplementations() {
+  std::vector<gl::GLImplementation> impls;
+  impls.push_back(gl::kGLImplementationEGLGLES2);
+  return impls;
+}
+
+ui::GLOzone* WaylandDisplay::GetGLOzone(
+    gl::GLImplementation implementation) {
+  switch (implementation) {
+    case gl::kGLImplementationEGLGLES2:
+      return egl_implementation_.get();
+    default:
+      return nullptr;
+  }
 }
 
 void WaylandDisplay::InitializeDisplay() {
@@ -271,7 +301,7 @@ void WaylandDisplay::InitializeDisplay() {
 
 WaylandWindow* WaylandDisplay::CreateAcceleratedSurface(unsigned w) {
   WaylandWindow* window = new WaylandWindow(w);
-  widget_map_[w] = window;
+  widget_map_[w].reset(window);
 
   return window;
 }
@@ -297,7 +327,6 @@ void WaylandDisplay::StopProcessingEvents() {
 void WaylandDisplay::Terminate() {
   loop_ = NULL;
   if (!widget_map_.empty()) {
-    STLDeleteValues(&widget_map_);
     widget_map_.clear();
   }
 
@@ -313,8 +342,10 @@ void WaylandDisplay::Terminate() {
   if (text_input_manager_)
     wl_text_input_manager_destroy(text_input_manager_);
 
+#if defined(USE_DATA_DEVICE_MANAGER)
   if (data_device_manager_)
     wl_data_device_manager_destroy(data_device_manager_);
+#endif
 
 #if defined(ENABLE_DRM_SUPPORT)
   if (m_deviceName)
@@ -352,8 +383,8 @@ void WaylandDisplay::Terminate() {
 }
 
 WaylandWindow* WaylandDisplay::GetWidget(unsigned w) const {
-  std::map<unsigned, WaylandWindow*>::const_iterator it = widget_map_.find(w);
-  return it == widget_map_.end() ? NULL : it->second;
+  WindowMap::const_iterator it = widget_map_.find(w);
+  return it == widget_map_.end() ? NULL : it->second.get();
 }
 
 void WaylandDisplay::SetWidgetState(unsigned w, ui::WidgetState state) {
@@ -411,22 +442,24 @@ void WaylandDisplay::SetWidgetTitle(unsigned w, const base::string16& title) {
   widget->SetWindowTitle(title);
 }
 
-void WaylandDisplay::CreateWidget(unsigned widget,
-                                  unsigned parent,
-                                  int x,
-                                  int y,
-                                  ui::WidgetType type) {
+void WaylandDisplay::CreateWidget(unsigned widget) {
   DCHECK(!GetWidget(widget));
-  WaylandWindow* window = CreateAcceleratedSurface(widget);
+  CreateAcceleratedSurface(widget);
+}
+
+void WaylandDisplay::InitWindow(unsigned handle,
+                                unsigned parent,
+                                int x,
+                                int y,
+                                ui::WidgetType type) {
+  WaylandWindow* window = GetWidget(handle);
 
   WaylandWindow* parent_window = GetWidget(parent);
   DCHECK(window);
   switch (type) {
   case ui::WINDOW:
-    window->SetShellAttributes(WaylandWindow::TOPLEVEL);
-    break;
   case ui::WINDOWFRAMELESS:
-    NOTIMPLEMENTED();
+    window->SetShellAttributes(WaylandWindow::TOPLEVEL);
     break;
   case ui::POPUP:
   case ui::TOOLTIP:
@@ -511,20 +544,28 @@ void WaylandDisplay::HideInputPanel() {
 }
 
 void WaylandDisplay::RequestDragData(const std::string& mime_type) {
+#if defined(USE_DATA_DEVICE_MANAGER)
   primary_seat_->GetDataDevice()->RequestDragData(mime_type);
+#endif
 }
 
 void WaylandDisplay::RequestSelectionData(const std::string& mime_type) {
+#if defined(USE_DATA_DEVICE_MANAGER)
   primary_seat_->GetDataDevice()->RequestSelectionData(mime_type);
+#endif
 }
 
 void WaylandDisplay::DragWillBeAccepted(uint32_t serial,
                                         const std::string& mime_type) {
+#if defined(USE_DATA_DEVICE_MANAGER)
   primary_seat_->GetDataDevice()->DragWillBeAccepted(serial, mime_type);
+#endif
 }
 
 void WaylandDisplay::DragWillBeRejected(uint32_t serial) {
+#if defined(USE_DATA_DEVICE_MANAGER)
   primary_seat_->GetDataDevice()->DragWillBeRejected(serial);
+#endif
 }
 
 #if defined(ENABLE_DRM_SUPPORT)
@@ -584,9 +625,11 @@ void WaylandDisplay::DisplayHandleGlobal(void *data,
   if (strcmp(interface, "wl_compositor") == 0) {
     disp->compositor_ = static_cast<wl_compositor*>(
         wl_registry_bind(registry, name, &wl_compositor_interface, 1));
+#if defined(USE_DATA_DEVICE_MANAGER)
   } else if (strcmp(interface, "wl_data_device_manager") == 0) {
     disp->data_device_manager_ = static_cast<wl_data_device_manager*>(
         wl_registry_bind(registry, name, &wl_data_device_manager_interface, 1));
+#endif
 #if defined(ENABLE_DRM_SUPPORT)
   } else if (!strcmp(interface, "wl_drm")) {
     m_drm = static_cast<struct wl_drm*>(wl_registry_bind(registry,
@@ -607,7 +650,9 @@ void WaylandDisplay::DisplayHandleGlobal(void *data,
     // TODO(mcatanzaro): The display passed to WaylandInputDevice must have a
     // valid data device manager. We should ideally be robust to the compositor
     // advertising a wl_seat first. No known compositor does this, fortunately.
+#if defined(USE_DATA_DEVICE_MANAGER)
     CHECK(disp->data_device_manager_);
+#endif
     WaylandSeat* seat = new WaylandSeat(disp, name);
     disp->seat_list_.push_back(seat);
     disp->primary_seat_ = disp->seat_list_.front();
@@ -636,6 +681,7 @@ bool WaylandDisplay::OnMessageReceived(const IPC::Message& message) {
   IPC_BEGIN_MESSAGE_MAP(WaylandDisplay, message)
   IPC_MESSAGE_HANDLER(WaylandDisplay_State, SetWidgetState)
   IPC_MESSAGE_HANDLER(WaylandDisplay_Create, CreateWidget)
+  IPC_MESSAGE_HANDLER(WaylandDisplay_InitWindow, InitWindow)
   IPC_MESSAGE_HANDLER(WaylandDisplay_MoveWindow, MoveWindow)
   IPC_MESSAGE_HANDLER(WaylandDisplay_Title, SetWidgetTitle)
   IPC_MESSAGE_HANDLER(WaylandDisplay_AddRegion, AddRegion)

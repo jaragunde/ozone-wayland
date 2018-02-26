@@ -7,15 +7,10 @@
   'variables': {
     'variables': {
       'enable_drm_support%': 0,
+      'use_data_device_manager%': 0,
     },
     'enable_drm_support%': '<(enable_drm_support)',
-    'conditions': [
-      ['sysroot!=""', {
-        'pkg-config': '../../build/linux/pkg-config-wrapper "<(sysroot)" "<(target_arch)"',
-      }, {
-        'pkg-config': 'pkg-config'
-      }],
-    ],
+    'use_data_device_manager%': '<(use_data_device_manager)',
   },
 
   'targets': [
@@ -24,13 +19,10 @@
       'type': 'static_library',
       'variables': {
         'WAYLAND_VERSION': '1.4.0',
-        'MESA_VERSION': '9.1.3',
         'wayland_packages': [
-          'egl >= <(MESA_VERSION)',
           'wayland-client >= <(WAYLAND_VERSION)',
           'wayland-cursor >= <(WAYLAND_VERSION)',
-          'wayland-egl >= <(MESA_VERSION)',
-          'xkbcommon',
+          'wayland-egl',
         ],
       },
       'defines': [
@@ -42,22 +34,19 @@
       'direct_dependent_settings': {
         'cflags': [
           '<!@(<(pkg-config) --cflags <(wayland_packages))',
-          '<!@(<(pkg-config) --cflags gbm)',
         ],
       },
       'link_settings': {
         'ldflags': [
           '<!@(<(pkg-config) --libs-only-L --libs-only-other <(wayland_packages))',
-          '<!@(<(pkg-config) --libs-only-L --libs-only-other gbm)',
         ],
         'libraries': [
           '<!@(<(pkg-config) --libs-only-l <(wayland_packages))',
-          '<!@(<(pkg-config) --libs-only-l gbm)',
         ],
       },
       'dependencies': [
         '../../base/base.gyp:base',
-	'../../skia/skia.gyp:skia',
+        '../../skia/skia.gyp:skia',
         '<(DEPTH)/ui/gfx/ipc/gfx_ipc.gyp:gfx_ipc',
         '../../ui/ozone/ozone.gyp:ozone_base',
       ],
@@ -76,11 +65,27 @@
             'protocol/wayland-drm-protocol.cc',
             'protocol/wayland-drm-protocol.h',
           ],
+          'cflags': [
+            '<!@(<(pkg-config) --cflags gbm)',
+          ],
+          'link_settings': {
+            'ldflags': [
+              '<!@(<(pkg-config) --libs-only-L --libs-only-other gbm)',
+            ],
+            'libraries': [
+              '<!@(<(pkg-config) --libs-only-l gbm)',
+            ],
+          }
+        }],
+        ['<(use_data_device_manager)==1', {
+          'defines': ['USE_DATA_DEVICE_MANAGER',],
+          'sources': [
+            'data_device.cc',
+            'data_device.h',
+          ],
         }],
       ],
       'sources': [
-        'data_device.cc',
-        'data_device.h',
         'data_offer.cc',
         'data_offer.h',
         'display.cc',
@@ -97,8 +102,8 @@
         'window.h',
         'egl/egl_window.cc',
         'egl/egl_window.h',
-        'egl/surface_ozone_wayland.cc',
-        'egl/surface_ozone_wayland.h',
+        'egl/gl_surface_wayland.cc',
+        'egl/gl_surface_wayland.h',
         'input/cursor.cc',
         'input/cursor.h',
         'input/keyboard.cc',

@@ -10,10 +10,10 @@
 #include "ozone/platform/ozone_gpu_platform_support_host.h"
 #include "ozone/platform/window_manager_wayland.h"
 #include "ui/base/cursor/ozone/bitmap_cursor_factory_ozone.h"
-#include "ui/events/ozone/events_ozone.h"
-#include "ui/events/platform/platform_event_source.h"
 #include "ui/display/display.h"
 #include "ui/display/screen.h"
+#include "ui/events/ozone/events_ozone.h"
+#include "ui/events/platform/platform_event_source.h"
 #include "ui/platform_window/platform_window_delegate.h"
 
 namespace ui {
@@ -28,17 +28,22 @@ OzoneWaylandWindow::OzoneWaylandWindow(PlatformWindowDelegate* delegate,
       transparent_(false),
       bounds_(bounds),
       parent_(0),
+      type_(ui::WINDOWFRAMELESS),
       state_(UNINITIALIZED),
       region_(NULL),
-      cursor_type_(-1) {
+      init_window_(false) {
   static int opaque_handle = 0;
   opaque_handle++;
   handle_ = opaque_handle;
   delegate_->OnAcceleratedWidgetAvailable(opaque_handle, 1.0);
+
+  PlatformEventSource::GetInstance()->AddPlatformEventDispatcher(this);
+  sender_->AddChannelObserver(this);
+  window_manager_->OnRootWindowCreated(this);
 }
 
 OzoneWaylandWindow::~OzoneWaylandWindow() {
-  sender_->RemoveGpuThreadObserver(this);
+  sender_->RemoveChannelObserver(this);
   PlatformEventSource::GetInstance()->RemovePlatformEventDispatcher(this);
   if (region_)
     delete region_;
@@ -46,7 +51,6 @@ OzoneWaylandWindow::~OzoneWaylandWindow() {
 
 void OzoneWaylandWindow::InitPlatformWindow(
     PlatformWindowType type, gfx::AcceleratedWidget parent_window) {
-  PlatformEventSource::GetInstance()->AddPlatformEventDispatcher(this);
   switch (type) {
     case PLATFORM_WINDOW_TYPE_POPUP:
     case PLATFORM_WINDOW_TYPE_MENU: {
@@ -55,7 +59,6 @@ void OzoneWaylandWindow::InitPlatformWindow(
         parent_ = window_manager_->GetActiveWindow()->GetHandle();
       type_ = ui::POPUP;
       ValidateBounds();
-      window_manager_->OnRootWindowCreated(this);
       break;
     }
     case PLATFORM_WINDOW_TYPE_TOOLTIP: {
@@ -70,7 +73,6 @@ void OzoneWaylandWindow::InitPlatformWindow(
     case PLATFORM_WINDOW_TYPE_WINDOW:
       parent_ = 0;
       type_ = ui::WINDOW;
-      window_manager_->OnRootWindowCreated(this);
       break;
     case PLATFORM_WINDOW_TYPE_WINDOW_FRAMELESS:
       NOTIMPLEMENTED();
@@ -79,7 +81,16 @@ void OzoneWaylandWindow::InitPlatformWindow(
       break;
   }
 
-  sender_->AddGpuThreadObserver(this);
+  init_window_ = true;
+
+  if (!sender_->IsConnected())
+    return;
+
+  sender_->Send(new WaylandDisplay_InitWindow(handle_,
+                                              parent_,
+                                              bounds_.x(),
+                                              bounds_.y(),
+                                              type_));
 }
 
 void OzoneWaylandWindow::SetTitle(const base::string16& title) {
@@ -169,6 +180,8 @@ void OzoneWaylandWindow::Close() {
     window_manager_->OnRootWindowClosed(this);
 }
 
+void OzoneWaylandWindow::PrepareForShutdown() {}
+
 void OzoneWaylandWindow::SetCapture() {
   window_manager_->GrabEvents(handle_);
 }
@@ -180,7 +193,7 @@ void OzoneWaylandWindow::ReleaseCapture() {
 void OzoneWaylandWindow::ToggleFullscreen() {
   display::Screen *screen = display::Screen::GetScreen();
   if (!screen)
-    NOTREACHED() << "Unable to retrieve valid gfx::Screen";
+    NOTREACHED() << "Unable to retrieve valid display::Screen";
 
   SetBounds(screen->GetPrimaryDisplay().bounds());
   state_ = ui::FULLSCREEN;
@@ -229,7 +242,7 @@ void OzoneWaylandWindow::ConfineCursorToBounds(const gfx::Rect& bounds) {
 // WindowTreeHostDelegateWayland, ui::PlatformEventDispatcher implementation:
 bool OzoneWaylandWindow::CanDispatchEvent(
     const ui::PlatformEvent& ne) {
-  return window_manager_->event_grabber() == handle_;
+  return window_manager_->event_grabber() == gfx::AcceleratedWidget(handle_);
 }
 
 uint32_t OzoneWaylandWindow::DispatchEvent(
@@ -240,12 +253,20 @@ uint32_t OzoneWaylandWindow::DispatchEvent(
   return POST_DISPATCH_STOP_PROPAGATION;
 }
 
-void OzoneWaylandWindow::OnGpuThreadReady() {
-  sender_->Send(new WaylandDisplay_Create(handle_,
-                                          parent_,
-                                          bounds_.x(),
-                                          bounds_.y(),
-                                          type_));
+void OzoneWaylandWindow::OnGpuProcessLaunched() {
+  if (sender_->IsConnected())
+    DeferredSendingToGpu();
+}
+
+void OzoneWaylandWindow::DeferredSendingToGpu() {
+  sender_->Send(new WaylandDisplay_Create(handle_));
+  if (init_window_)
+    sender_->Send(new WaylandDisplay_InitWindow(handle_,
+                                                parent_,
+                                                bounds_.x(),
+                                                bounds_.y(),
+                                                type_));
+
   if (state_)
     sender_->Send(new WaylandDisplay_State(handle_, state_));
 
@@ -256,7 +277,7 @@ void OzoneWaylandWindow::OnGpuThreadReady() {
   SetCursor();
 }
 
-void OzoneWaylandWindow::OnGpuThreadRetired() {
+void OzoneWaylandWindow::OnChannelDestroyed() {
 }
 
 void OzoneWaylandWindow::SendWidgetState() {
@@ -305,6 +326,11 @@ void OzoneWaylandWindow::SetCursor() {
 
 void OzoneWaylandWindow::ValidateBounds() {
   DCHECK(parent_);
+  if (!parent_) {
+    LOG(INFO) << "Validate bounds will not do, parent is null";
+    return;
+  }
+
   gfx::Rect parent_bounds = window_manager_->GetWindow(parent_)->GetBounds();
   int x = bounds_.x() - parent_bounds.x();
   int y = bounds_.y() - parent_bounds.y();

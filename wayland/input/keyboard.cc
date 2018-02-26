@@ -67,7 +67,7 @@ void WaylandKeyboard::OnKeyboardKeymap(void *data,
     return;
   }
 
-  base::SharedMemoryHandle section =  base::FileDescriptor(fd, true);
+  base::SharedMemoryHandle section = base::SharedMemoryHandle::ImportHandle(fd, size);
   device->dispatcher_->InitializeXKB(section, size);
 }
 

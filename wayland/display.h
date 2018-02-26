@@ -19,15 +19,17 @@
 #include <wayland-client.h>
 #include <list>
 #include <map>
+#include <memory>
 #include <queue>
 #include <string>
 #include <vector>
 
-#include "base/macros.h"
 #include "base/memory/shared_memory.h"
 #include "base/memory/weak_ptr.h"
 #include "ozone/platform/window_constants.h"
+#include "ozone/wayland/egl/gl_surface_wayland.h"
 #include "ui/events/event_constants.h"
+#include "ui/gl/gl_surface.h"
 #include "ui/ozone/public/gpu_platform_support.h"
 #include "ui/ozone/public/surface_factory_ozone.h"
 
@@ -51,7 +53,7 @@ class WaylandSeat;
 class WaylandShell;
 class WaylandWindow;
 
-typedef std::map<unsigned, WaylandWindow*> WindowMap;
+typedef std::map<unsigned, std::unique_ptr<WaylandWindow>> WindowMap;
 
 // WaylandDisplay is a wrapper around wl_display. Once we get a valid
 // wl_display, the Wayland server will send different events to register
@@ -93,7 +95,8 @@ class WaylandDisplay : public ui::SurfaceFactoryOzone,
   // Returns WaylandWindow associated with w. The ownership is not transferred
   // to the caller.
   WaylandWindow* GetWindow(unsigned window_handle) const;
-  gfx::AcceleratedWidget GetNativeWindow(unsigned window_handle);
+  intptr_t GetNativeWindow(unsigned window_handle);
+  wl_egl_window* GetEglWindow(unsigned window_handle);
 
   // Destroys WaylandWindow whose handle is w.
   void DestroyWindow(unsigned w);
@@ -104,23 +107,21 @@ class WaylandDisplay : public ui::SurfaceFactoryOzone,
 
   bool InitializeHardware();
 
-  // Ozone Display implementation:
-  intptr_t GetNativeDisplay() override;
-
-  // Ownership is passed to the caller.
-  std::unique_ptr<ui::SurfaceOzoneEGL> CreateEGLSurfaceForWidget(
-      gfx::AcceleratedWidget widget) override;
-
-  bool LoadEGLGLES2Bindings(
-      ui::SurfaceFactoryOzone::AddGLLibraryCallback add_gl_library,
-      ui::SurfaceFactoryOzone::SetGLGetProcAddressProcCallback
-      proc_address) override;
-  scoped_refptr<ui::NativePixmap> CreateNativePixmap(
-      gfx::AcceleratedWidget widget, gfx::Size size, gfx::BufferFormat format,
-          gfx::BufferUsage usage) override;
-
+  // SurfaceFactoryOzone:
+  std::vector<gl::GLImplementation> GetAllowedGLImplementations() override;
+  ui::GLOzone* GetGLOzone(gl::GLImplementation implementation) override;
   std::unique_ptr<ui::SurfaceOzoneCanvas> CreateCanvasForWidget(
       gfx::AcceleratedWidget widget) override;
+  scoped_refptr<gfx::NativePixmap> CreateNativePixmap(
+      gfx::AcceleratedWidget widget,
+      gfx::Size size,
+      gfx::BufferFormat format,
+      gfx::BufferUsage usage) override;
+  scoped_refptr<gfx::NativePixmap> CreateNativePixmapFromHandle(
+      gfx::AcceleratedWidget widget,
+      gfx::Size size,
+      gfx::BufferFormat format,
+      const gfx::NativePixmapHandle& handle) override;
 
   void MotionNotify(float x, float y);
   void ButtonNotify(unsigned handle,
@@ -194,11 +195,12 @@ class WaylandDisplay : public ui::SurfaceFactoryOzone,
   WaylandWindow* GetWidget(unsigned w) const;
   void SetWidgetState(unsigned widget, ui::WidgetState state);
   void SetWidgetTitle(unsigned w, const base::string16& title);
-  void CreateWidget(unsigned widget,
-                    unsigned parent,
-                    int x,
-                    int y,
-                    ui::WidgetType type);
+  void CreateWidget(unsigned widget);
+  void InitWindow(unsigned widget,
+                  unsigned parent,
+                  int x,
+                  int y,
+                  ui::WidgetType type);
   void MoveWindow(unsigned widget, unsigned parent,
                   ui::WidgetType type, const gfx::Rect& rect);
   void AddRegion(unsigned widget, int left, int top, int right, int bottom);
@@ -242,8 +244,10 @@ class WaylandDisplay : public ui::SurfaceFactoryOzone,
   WaylandScreen* primary_screen_;
   WaylandSeat* primary_seat_;
   WaylandDisplayPollThread* display_poll_thread_;
+#if defined(ENABLE_DRM_SUPPORT)
   gbm_device* device_;
   char* m_deviceName;
+#endif
   IPC::Sender* sender_;
   base::MessageLoop* loop_;
 
@@ -254,9 +258,12 @@ class WaylandDisplay : public ui::SurfaceFactoryOzone,
   DeferredMessages deferred_messages_;
   unsigned serial_;
   bool processing_events_ :1;
+#if defined(ENABLE_DRM_SUPPORT)
   bool m_authenticated_ :1;
   int m_fd_;
   uint32_t m_capabilities_;
+#endif
+  std::unique_ptr<ui::GLOzone> egl_implementation_;
   static WaylandDisplay* instance_;
   // Support weak pointers for attach & detach callbacks.
   base::WeakPtrFactory<WaylandDisplay> weak_ptr_factory_;

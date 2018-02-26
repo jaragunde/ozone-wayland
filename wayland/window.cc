@@ -121,7 +121,7 @@ wl_egl_window* WaylandWindow::egl_window() const {
 }
 
 void WaylandWindow::Resize(unsigned width, unsigned height) {
-  if ((allocation_.width() == width) && (allocation_.height() == height))
+  if ((allocation_.width() == int(width)) && (allocation_.height() == int(height)))
     return;
 
   allocation_ = gfx::Rect(allocation_.x(), allocation_.y(), width, height);

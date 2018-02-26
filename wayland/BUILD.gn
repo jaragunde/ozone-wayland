@@ -1,0 +1,90 @@
+# Copyright (c) 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/linux/pkg_config.gni")
+
+declare_args() {
+  enable_drm_support = 0
+  use_data_device_manager = 0
+}
+
+pkg_config("wayland_lib") {
+  packages = [
+    "wayland-client",
+    "wayland-egl",
+  ]
+}
+
+config("wayland_config") {
+  defines = [ "OZONE_WAYLAND_IMPLEMENTATION=1" ]
+  include_dirs = [
+    "../..",
+    "//third_party/khronos",
+  ]
+}
+
+source_set("wayland") {
+
+  configs += [ ":wayland_lib" ]
+  configs += [ ":wayland_config" ]
+
+  deps = [
+    "//skia",
+    "//ui/gfx",
+    "//ui/gfx/geometry",
+    "//ui/gl",
+  ]
+
+  public_deps = [
+    "//base",
+    "//ui/gfx/ipc",
+  ]
+
+  sources = [
+    "data_offer.cc",
+    "data_offer.h",
+    "display.cc",
+    "display.h",
+    "display_poll_thread.cc",
+    "display_poll_thread.h",
+    "ozone_wayland_screen.cc",
+    "ozone_wayland_screen.h",
+    "screen.cc",
+    "screen.h",
+    "seat.cc",
+    "seat.h",
+    "window.cc",
+    "window.h",
+    "egl/egl_window.cc",
+    "egl/egl_window.h",
+    "egl/gl_surface_wayland.cc",
+    "egl/gl_surface_wayland.h",
+    "input/cursor.cc",
+    "input/cursor.h",
+    "input/keyboard.cc",
+    "input/keyboard.h",
+    "input/pointer.cc",
+    "input/pointer.h",
+    "input/text_input.h",
+    "input/text_input.cc",
+    "input/touchscreen.cc",
+    "input/touchscreen.h",
+    "protocol/text-protocol.c",
+    "protocol/text-client-protocol.h",
+    "protocol/ivi-application-protocol.c",
+    "protocol/ivi-application-client-protocol.h",
+    "protocol/xdg-shell-protocol.c",
+    "protocol/xdg-shell-client-protocol.h",
+    "shell/shell.cc",
+    "shell/shell.h",
+    "shell/shell_surface.h",
+    "shell/shell_surface.cc",
+    "shell/wl_shell_surface.cc",
+    "shell/wl_shell_surface.h",
+    "shell/xdg_shell_surface.cc",
+    "shell/xdg_shell_surface.h",
+    "shell/ivi_shell_surface.cc",
+    "shell/ivi_shell_surface.h",
+  ]
+}

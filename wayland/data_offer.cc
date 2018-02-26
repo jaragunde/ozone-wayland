@@ -51,7 +51,7 @@ int WaylandDataOffer::Receive(const std::string& mime_type) {
 void WaylandDataOffer::OnOffer(void* data,
                                wl_data_offer* data_offer,
                                const char* mime_type) {
-  auto self = static_cast<WaylandDataOffer*>(data);
+  auto* self = static_cast<WaylandDataOffer*>(data);
   self->mime_types_.push_back(mime_type);
 }
 

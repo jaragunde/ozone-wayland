@@ -6,7 +6,9 @@
 #include "ozone/wayland/seat.h"
 
 #include "base/logging.h"
+#if defined(USE_DATA_DEVICE_MANAGER)
 #include "ozone/wayland/data_device.h"
+#endif
 #include "ozone/wayland/display.h"
 #include "ozone/wayland/input/cursor.h"
 #include "ozone/wayland/input/keyboard.h"
@@ -36,12 +38,16 @@ WaylandSeat::WaylandSeat(WaylandDisplay* display,
   wl_seat_add_listener(seat_, &kInputSeatListener, this);
   wl_seat_set_user_data(seat_, this);
 
+#if defined(USE_DATA_DEVICE_MANAGER)
   data_device_ = new WaylandDataDevice(display, seat_);
+#endif
   text_input_ = new WaylandTextInput(this);
 }
 
 WaylandSeat::~WaylandSeat() {
+#if defined(USE_DATA_DEVICE_MANAGER)
   delete data_device_;
+#endif
   delete input_keyboard_;
   delete input_pointer_;
   delete text_input_;

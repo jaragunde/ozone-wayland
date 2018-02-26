@@ -42,9 +42,7 @@ class XDGShellSurface : public WaylandShellSurface {
                            struct xdg_surface* xdg_surface);
 
   static void HandlePopupPopupDone(void* data,
-                                   struct xdg_popup* xdg_popup,
-                                   uint32_t serial);
-
+                                   struct xdg_popup* xdg_popup);
  private:
   xdg_surface* xdg_surface_;
   xdg_popup* xdg_popup_;

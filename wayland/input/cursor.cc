@@ -28,7 +28,7 @@ WaylandCursor::~WaylandCursor() {
   if (buffer_)
     wl_buffer_destroy(buffer_);
 
-  if (sh_memory_->handle().fd) {
+  if (sh_memory_->handle().GetHandle()) {
     sh_memory_->Unmap();
     sh_memory_->Close();
   }
@@ -89,9 +89,9 @@ bool WaylandCursor::CreateSHMBuffer(int width, int height) {
   height_ = height;
   stride = width_ * 4;
   SkImageInfo info = SkImageInfo::MakeN32Premul(width_, height_);
-  size = info.getSafeSize(stride);
+  size = info.computeByteSize(stride);
 
-  if (sh_memory_->handle().fd) {
+  if (sh_memory_->handle().GetHandle()) {
     sh_memory_->Unmap();
     sh_memory_->Close();
   }
@@ -102,7 +102,7 @@ bool WaylandCursor::CreateSHMBuffer(int width, int height) {
   }
 
   pool = wl_shm_create_pool(shm_,
-                            sh_memory_->handle().fd,
+                            sh_memory_->handle().GetHandle(),
                             size);
   buffer_ = wl_shm_pool_create_buffer(pool, 0,
                                       width_, height_,
@@ -121,7 +121,7 @@ void WaylandCursor::HideCursor(uint32_t serial) {
     buffer_ = NULL;
   }
 
-  if (sh_memory_->handle().fd) {
+  if (sh_memory_->handle().GetHandle()) {
     sh_memory_->Unmap();
     sh_memory_->Close();
   }

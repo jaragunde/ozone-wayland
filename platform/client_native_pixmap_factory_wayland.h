@@ -5,12 +5,14 @@
 #ifndef OZONE_CLIENT_NATIVE_PIXMAP_FACTORY_WAYLAND_H_
 #define OZONE_CLIENT_NATIVE_PIXMAP_FACTORY_WAYLAND_H_
 
+namespace gfx {
+class ClientNativePixmapFactory;
+}
+
 namespace ui {
 
-class ClientNativePixmapFactory;
-
 // Constructor hook for use in constructor_list.cc
-ClientNativePixmapFactory* CreateClientNativePixmapFactoryWayland();
+gfx::ClientNativePixmapFactory* CreateClientNativePixmapFactoryWayland();
 
 }  // namespace ui
 

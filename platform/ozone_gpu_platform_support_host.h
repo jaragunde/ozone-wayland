@@ -15,7 +15,7 @@
 
 namespace ui {
 
-class GpuThreadObserver;
+class ChannelObserver;
 
 class OzoneGpuPlatformSupportHost : public GpuPlatformSupportHost,
                                     public IPC::Sender {
@@ -26,16 +26,18 @@ class OzoneGpuPlatformSupportHost : public GpuPlatformSupportHost,
   void RegisterHandler(GpuPlatformSupportHost* handler);
   void UnregisterHandler(GpuPlatformSupportHost* handler);
 
-  void AddGpuThreadObserver(GpuThreadObserver* observer);
-  void RemoveGpuThreadObserver(GpuThreadObserver* observer);
+  void AddChannelObserver(ChannelObserver* observer);
+  void RemoveChannelObserver(ChannelObserver* observer);
 
   bool IsConnected();
 
   // GpuPlatformSupportHost:
-  void OnChannelEstablished(
+  void OnGpuProcessLaunched(
       int host_id,
+      scoped_refptr<base::SingleThreadTaskRunner> ui_runner,
       scoped_refptr<base::SingleThreadTaskRunner> send_runner,
       const base::Callback<void(IPC::Message*)>& send_callback) override;
+
   void OnChannelDestroyed(int host_id) override;
 
   // IPC::Listener:
@@ -46,12 +48,14 @@ class OzoneGpuPlatformSupportHost : public GpuPlatformSupportHost,
 
  private:
   int host_id_ = -1;
+  bool gpu_process_launched_ = false;
 
+  scoped_refptr<base::SingleThreadTaskRunner> ui_runner_;
   scoped_refptr<base::SingleThreadTaskRunner> send_runner_;
   base::Callback<void(IPC::Message*)> send_callback_;
 
   std::vector<GpuPlatformSupportHost*> handlers_;  // Not owned.
-  base::ObserverList<GpuThreadObserver> channel_observers_;
+  base::ObserverList<ChannelObserver> channel_observers_;
 };
 
 }  // namespace ui

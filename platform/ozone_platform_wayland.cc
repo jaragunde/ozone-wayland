@@ -4,8 +4,6 @@
 
 #include "ozone/platform/ozone_platform_wayland.h"
 
-#include <memory>
-
 #include "base/at_exit.h"
 #include "base/bind.h"
 #include "base/memory/ptr_util.h"
@@ -15,12 +13,12 @@
 #include "ozone/wayland/display.h"
 #include "ozone/wayland/ozone_wayland_screen.h"
 #include "ui/base/cursor/ozone/bitmap_cursor_factory_ozone.h"
+#include "ui/display/types/native_display_delegate.h"
 #include "ui/events/ozone/layout/keyboard_layout_engine_manager.h"
 #include "ui/events/ozone/layout/xkb/xkb_evdev_codes.h"
 #include "ui/events/ozone/layout/xkb/xkb_keyboard_layout_engine.h"
-#include "ui/ozone/common/native_display_delegate_ozone.h"
+#include "ui/events/system_input_injector.h"
 #include "ui/ozone/common/stub_overlay_manager.h"
-#include "ui/ozone/public/system_input_injector.h"
 #include "ui/platform_window/platform_window_delegate.h"
 
 namespace ui {
@@ -32,10 +30,7 @@ namespace {
 // This platform is Linux with the Wayland display server.
 class OzonePlatformWayland : public OzonePlatform {
  public:
-  OzonePlatformWayland() {
-    base::AtExitManager::RegisterTask(
-        base::Bind(&base::DeletePointer<OzonePlatformWayland>, this));
-  }
+  OzonePlatformWayland() {}
 
   ~OzonePlatformWayland() override {
   }
@@ -86,15 +81,11 @@ class OzonePlatformWayland : public OzonePlatform {
                                               window_manager_.get()));
   }
 
-  std::unique_ptr<NativeDisplayDelegate> CreateNativeDisplayDelegate() override {
+  std::unique_ptr<display::NativeDisplayDelegate> CreateNativeDisplayDelegate() override {
     return nullptr;
   }
 
-  base::ScopedFD OpenClientNativePixmapDevice() const {
-    return base::ScopedFD();
-  }
-
-  void InitializeUI() override {
+  void InitializeUI(const InitParams& args) override {
     // For tests.
     if (wayland_display_.get())
       return;
@@ -110,7 +101,7 @@ class OzonePlatformWayland : public OzonePlatform {
         new ui::WindowManagerWayland(gpu_platform_host_.get()));
   }
 
-  void InitializeGPU() override {
+  void InitializeGPU(const InitParams& args) override {
     if (!wayland_display_)
       wayland_display_.reset(new ozonewayland::WaylandDisplay());
 

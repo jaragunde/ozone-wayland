@@ -7,13 +7,12 @@
 #include <string>
 #include <vector>
 
-#include "base/macros.h"
 #include "base/memory/shared_memory.h"
 #include "base/strings/string16.h"
-#include "ipc/ipc_channel_handle.h"
 #include "ipc/ipc_message_macros.h"
 #include "ipc/ipc_message_utils.h"
-#include "ipc/ipc_platform_file.h"
+#include "ipc/ipc_param_traits.h"
+#include "ipc/param_traits_macros.h"
 #include "ozone/platform/window_constants.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "ui/events/event_constants.h"
@@ -150,7 +149,10 @@ IPC_MESSAGE_CONTROL2(WaylandDisplay_State,  // NOLINT(readability/fn_size)
                      unsigned /* window handle */,
                      ui::WidgetState /*state*/)
 
-IPC_MESSAGE_CONTROL5(WaylandDisplay_Create,  // NOLINT(readability/fn_size)
+IPC_MESSAGE_CONTROL1(WaylandDisplay_Create,  // NOLINT(readability/fn_size)
+                     unsigned /* window handle */)
+
+IPC_MESSAGE_CONTROL5(WaylandDisplay_InitWindow,  // NOLINT(readability/fn_size)
                      unsigned /* window handle */,
                      unsigned /* window parent */,
                      int /* x */,

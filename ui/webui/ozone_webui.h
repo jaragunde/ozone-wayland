@@ -9,11 +9,11 @@
 #include <string>
 #include <vector>
 
-#include "base/macros.h"
 #include "base/compiler_specific.h"
 #include "base/observer_list.h"
 #include "ozone/platform/ozone_export_wayland.h"
 #include "ui/base/ime/linux/linux_input_method_context.h"
+#include "ui/base/ime/linux/text_edit_key_bindings_delegate_auralinux.h"
 #include "ui/gfx/color_utils.h"
 #include "ui/gfx/font_render_params.h"
 #include "ui/gfx/geometry/insets.h"
@@ -23,7 +23,6 @@
 #include "ui/views/controls/button/label_button_border.h"
 #include "ui/views/linux_ui/linux_ui.h"
 #include "ui/views/window/frame_buttons.h"
-#include "ui/gfx/font.h"
 
 class SkBitmap;
 
@@ -41,7 +40,9 @@ namespace views {
 class Border;
 class LabelButton;
 class View;
+class DeviceScaleFactorObserver;
 class NativeThemeChangeObserver;
+class NavButtonProvider;
 class WindowButtonOrderObserver;
 // Interface to Wayland desktop features.
 //
@@ -61,7 +62,7 @@ class OZONE_WAYLAND_EXPORT OzoneWebUI : public views::LinuxUI {
   // ui::LinuxShellDialog:
   ui::SelectFileDialog* CreateSelectFileDialog(
       ui::SelectFileDialog::Listener* listener,
-      ui::SelectFilePolicy* policy) const override;
+      std::unique_ptr<ui::SelectFilePolicy> policy) const override;
 
   void GetDefaultFontDescription(
       std::string* family_out,
@@ -72,12 +73,9 @@ class OZONE_WAYLAND_EXPORT OzoneWebUI : public views::LinuxUI {
 
   // ui::LinuxUI:
   void Initialize() override;
-  void MaterialDesignControllerReady() override {}
 
   // These methods are not needed
-  gfx::Image GetThemeImageNamed(int id) const override;
   bool GetColor(int id, SkColor* color) const override;
-  bool HasCustomImage(int id) const override;
   SkColor GetFocusRingColor() const override;
   SkColor GetThumbActiveColor() const override;
   SkColor GetThumbInactiveColor() const override;
@@ -105,14 +103,18 @@ class OZONE_WAYLAND_EXPORT OzoneWebUI : public views::LinuxUI {
       WindowButtonOrderObserver* observer) override;
   void RemoveWindowButtonOrderObserver(
       WindowButtonOrderObserver* observer) override;
-  bool UnityIsRunning() override;
   NonClientMiddleClickAction GetNonClientMiddleClickAction() override;
   void NotifyWindowManagerStartupComplete() override;
+  void AddDeviceScaleFactorObserver(
+      views::DeviceScaleFactorObserver* observer) override;
+  void RemoveDeviceScaleFactorObserver(
+      views::DeviceScaleFactorObserver* observer) override;
+  std::unique_ptr<views::NavButtonProvider> CreateNavButtonProvider() override;
 
   bool MatchEvent(const ui::Event& event,
                   std::vector<TextEditCommandAuraLinux>* commands) override;
 
-  void UpdateDeviceScaleFactor(float scalefactor) override;
+  void UpdateDeviceScaleFactor() override;
   float GetDeviceScaleFactor() const override;
   bool GetTint(int id, color_utils::HSL* tint) const override;
 

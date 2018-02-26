@@ -6,10 +6,9 @@
 
 #include "ozone/platform/desktop_platform_screen.h"
 #include "ozone/platform/ozone_platform_wayland.h"
-#include "ozone/ui/desktop_aura/desktop_window_tree_host_ozone.h"
+#include "ozone/ui/desktop_aura/desktop_window_tree_host_ozone_wayland.h"
 #include "ui/aura/window.h"
 #include "ui/views/widget/desktop_aura/desktop_screen.h"
-#include "ui/display/display.h"
 
 namespace views {
 
@@ -17,8 +16,7 @@ DesktopScreenWayland::DesktopScreenWayland()
     : display::Screen(),
       rect_(0, 0, 0, 0),
       displays_() {
-  platform_Screen_ = ui::CreatePlatformScreen(this);
-  SetGeometry(gfx::Rect(0, 0, 800, 600));
+  platform_Screen_ = CreatePlatformScreen(this);
 }
 
 DesktopScreenWayland::~DesktopScreenWayland() {
@@ -50,11 +48,8 @@ gfx::Point DesktopScreenWayland::GetCursorScreenPoint() {
 }
 
 bool DesktopScreenWayland::IsWindowUnderCursor(gfx::NativeWindow window) {
-  return GetWindowAtScreenPoint(GetCursorScreenPoint()) == window;
-}
-
-gfx::NativeWindow DesktopScreenWayland::GetWindowUnderCursor() {
-  return GetWindowAtScreenPoint(GetCursorScreenPoint());
+  NOTIMPLEMENTED();
+  return false;
 }
 
 gfx::NativeWindow DesktopScreenWayland::GetWindowAtScreenPoint(
@@ -74,7 +69,7 @@ int DesktopScreenWayland::GetNumDisplays() const {
   return displays_.size();
 }
 
-std::vector<display::Display> DesktopScreenWayland::GetAllDisplays() const {
+const std::vector<display::Display>& DesktopScreenWayland::GetAllDisplays() const {
   return displays_;
 }
 

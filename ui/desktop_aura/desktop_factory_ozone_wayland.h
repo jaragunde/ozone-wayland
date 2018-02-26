@@ -8,7 +8,7 @@
 #include "ui/views/views_export.h"
 #include "ui/views/widget/desktop_aura/desktop_factory_ozone.h"
 
-namespace gfx {
+namespace display {
 class Screen;
 }
 

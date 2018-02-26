@@ -7,10 +7,8 @@
 
 #include <wayland-client.h>
 
-#include <memory>
 #include <string>
 
-#include "base/macros.h"
 #include "ozone/wayland/window.h"
 
 namespace ozonewayland {

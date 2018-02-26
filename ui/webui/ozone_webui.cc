@@ -18,6 +18,7 @@
 #include "ozone/platform/ozone_platform_wayland.h"
 #include "ozone/ui/webui/input_method_context_impl_wayland.h"
 #include "ozone/ui/webui/select_file_dialog_impl_webui.h"
+#include "ui/views/window/nav_button_provider.h"
 
 namespace views {
 
@@ -36,8 +37,12 @@ void OzoneWebUI::Initialize() {
 
 ui::SelectFileDialog* OzoneWebUI::CreateSelectFileDialog(
     ui::SelectFileDialog::Listener* listener,
-    ui::SelectFilePolicy* policy) const {
+    std::unique_ptr<ui::SelectFilePolicy> policy) const {
+#if defined(USE_SELECT_FILE_DIALOG_WEBUI_IMPL)
   return ui::SelectFileDialogImplWebUI::Create(listener, policy);
+#endif
+  NOTIMPLEMENTED();
+  return nullptr;
 }
 
 std::unique_ptr<ui::LinuxInputMethodContext> OzoneWebUI::CreateInputMethodContext(
@@ -61,15 +66,7 @@ void OzoneWebUI::GetDefaultFontDescription(
   NOTIMPLEMENTED();
 }
 
-gfx::Image OzoneWebUI::GetThemeImageNamed(int id) const {
-  return gfx::Image();
-}
-
 bool OzoneWebUI::GetColor(int id, SkColor* color) const {
-  return false;
-}
-
-bool OzoneWebUI::HasCustomImage(int id) const {
   return false;
 }
 
@@ -145,7 +142,7 @@ gfx::Image OzoneWebUI::GetIconForContentType(
 std::unique_ptr<Border> OzoneWebUI::CreateNativeBorder(
   views::LabelButton* owning_button,
   std::unique_ptr<views::LabelButtonBorder> border) {
-  return border;
+  return std::move(border);
 }
 
 void OzoneWebUI::AddWindowButtonOrderObserver(
@@ -154,10 +151,6 @@ void OzoneWebUI::AddWindowButtonOrderObserver(
 
 void OzoneWebUI::RemoveWindowButtonOrderObserver(
   WindowButtonOrderObserver* observer) {
-}
-
-bool OzoneWebUI::UnityIsRunning() {
-  return 0;
 }
 
 LinuxUI::NonClientMiddleClickAction
@@ -173,8 +166,14 @@ bool OzoneWebUI::MatchEvent(const ui::Event& event,
   return false;
 }
 
-void OzoneWebUI::UpdateDeviceScaleFactor(float scalefactor) {
+void OzoneWebUI::UpdateDeviceScaleFactor() {
 }
+
+void OzoneWebUI::AddDeviceScaleFactorObserver(
+    views::DeviceScaleFactorObserver* observer) {}
+
+void OzoneWebUI::RemoveDeviceScaleFactorObserver(
+    views::DeviceScaleFactorObserver* observer) {}
 
 float OzoneWebUI::GetDeviceScaleFactor() const {
   return 0.0;
@@ -182,6 +181,10 @@ float OzoneWebUI::GetDeviceScaleFactor() const {
 
 bool OzoneWebUI::GetTint(int id, color_utils::HSL* tint) const {
   return true;
+}
+
+std::unique_ptr<views::NavButtonProvider> OzoneWebUI::CreateNavButtonProvider() {
+  return nullptr;
 }
 
 }  // namespace views

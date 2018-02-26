@@ -11,11 +11,12 @@
 #include "base/strings/string16.h"
 #include "ui/gfx/geometry/rect.h"
 
+struct wl_egl_window;
+
 namespace ozonewayland {
 
 class WaylandShellSurface;
 class EGLWindow;
-struct wl_egl_window;
 
 typedef unsigned WaylandWindowId;
 

@@ -89,7 +89,7 @@ void WaylandTouchscreen::OnTouchUp(void *data,
                                    device->pointer_position_.x(),
                                    device->pointer_position_.y(), id, time);
 
-  if (seat->GetGrabWindowHandle() && seat->GetGrabButton() == id)
+  if (int32_t(seat->GetGrabWindowHandle() && seat->GetGrabButton()) == id)
     seat->SetGrabWindowHandle(0, 0);
 }
 

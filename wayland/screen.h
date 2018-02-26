@@ -8,7 +8,6 @@
 
 #include <stdint.h>
 
-#include "base/macros.h"
 #include "ui/gfx/geometry/rect.h"
 
 struct wl_output;
